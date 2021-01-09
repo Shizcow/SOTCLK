@@ -17,7 +17,7 @@ struct Sox {
     sample_rate: u32,
     channels: u32,
     encoding: String,
-    other_options: Option<String>,
+    other_options: Option<Vec<String>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -63,10 +63,38 @@ fn main() {
 		.expect("Output command failed").stdout;
 	    
 	    let mut intermediate_name: OsString = "target/tracks/".to_owned().into();
-	    intermediate_name.push(track_name);
+	    intermediate_name.push(&track_name);
 	    intermediate_name.push(OsStr::new("/intermediate.raw"));
 	    
-	    let mut file = File::create(intermediate_name).unwrap();
+	    let mut file = File::create(&intermediate_name).unwrap();
 	    file.write_all(&output).unwrap();
+
+	    let mut final_name: OsString = "target/tracks/".to_owned().into();
+	    final_name.push(track_name);
+	    final_name.push(OsStr::new("/final.flac"));
+
+	    // finish
+	    
+	    let mut sox_cmd = Command::new("sox");
+	    sox_cmd.args(&["-b", config.sox.bit_depth.to_string().as_str()])
+		.args(&["-r", config.sox.sample_rate.to_string().as_str()])
+		.args(&["-c", config.sox.channels.to_string().as_str()])
+		.args(&["-e", config.sox.encoding.as_str()]);
+	    if let Some(other_args) = config.sox.other_options {
+		for other_arg in other_args {
+		    sox_cmd.arg(other_arg);
+		}
+	    }
+	    sox_cmd.args(&["-t", "raw"])
+		.arg(intermediate_name)
+		.args(&["-t", "flac"])
+		.arg(final_name);
+
+	    let sox_output = sox_cmd.output()
+		.expect("Sox command failed");
+
+	    println!("{}", String::from_utf8_lossy(&sox_output.stderr));
 	}
+
+    
 }
