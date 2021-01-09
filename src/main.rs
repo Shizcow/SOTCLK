@@ -22,7 +22,7 @@ impl TrackName {
 	pb.push("config.toml");
 	pb
     }
-    pub fn intermediate_file(&self) -> PathBuf {
+    pub fn raw_file(&self) -> PathBuf {
 	let mut pb = PathBuf::new();
 	pb.push("target");
 	pb.push("tracks");
@@ -30,12 +30,12 @@ impl TrackName {
 	pb.push("intermediate.raw");
 	pb
     }
-    pub fn final_file(&self) -> PathBuf {
+    pub fn unprocessed_file(&self) -> PathBuf {
 	let mut pb = PathBuf::new();
 	pb.push("target");
 	pb.push("tracks");
 	pb.push(&self.name);
-	pb.push("final.flac");
+	pb.push("unprocessed.flac");
 	pb
     }
     pub fn sox_config_cache(&self) -> PathBuf {
@@ -81,7 +81,7 @@ impl TrackConfig {
 	    .output()
 	    .expect("Output command failed").stdout;
 	
-	let mut file = File::create(track_name.intermediate_file()).unwrap();
+	let mut file = File::create(track_name.raw_file()).unwrap();
 	file.write_all(&output).unwrap();
     }
     pub fn write_cache(&self, track_name: &TrackName) {
@@ -169,9 +169,9 @@ impl SoxArgs {
 	    0
 	};
 	sox_args.append(&mut vec!["-t".into(), "raw".into(),
-				  track_name.intermediate_file().into_os_string(),
+				  track_name.raw_file().into_os_string(),
 				  "-t".into(), "flac".into(),
-				  track_name.final_file().into_os_string()]);
+				  track_name.unprocessed_file().into_os_string()]);
 
 	Self {
 	    args: sox_args,
@@ -235,21 +235,16 @@ fn main() {
 	    println!("--> Checking build cache");
 	    if SoxConfig::load_from_cache(&track_name) != Some(config.clone().into()) {
 		config.write_cache(&track_name);
+		println!("--> Running output command and dumping data");
+		println!("---> {}", &config.track.output_command);
+
+		config.dump_raw(&track_name);
+		
+		println!("--> Piping through sox");
+		SoxArgs::new(&track_name, &config).execute();
 	    } else {
 		println!("--> Build files up to date; continuing");
-		//continue;
 	    }
-
-	    println!("--> Running output command and dumping data");
-	    println!("---> {}", &config.track.output_command);
-
-	    config.dump_raw(&track_name);
-
-	    // finish
-	    
-	    println!("--> Piping through sox");
-	    
-	    SoxArgs::new(&track_name, &config).execute();
 	    
 	    println!("--> Finished processing track '{}'", config.track.name);
 	}
