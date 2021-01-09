@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::fs::{self, File};
+use std::path::PathBuf;
 use std::io::Write;
 use std::ffi::{OsStr, OsString};
 use std::os::unix::ffi::OsStrExt;
@@ -87,10 +88,13 @@ impl SoxConfig {
 	let mut sox_config_cache: OsString = "target/tracks/".to_owned().into();
 	sox_config_cache.push(&track_name);
 	sox_config_cache.push(OsStr::new("/sox.toml"));
-	
-	toml::from_str::<TrackConfig>(
-	    &fs::read_to_string(sox_config_cache).unwrap()
-	).ok().map(|o| o.into()) // if invalid just regenerate anyway
+
+	if let Ok(cfg_str) = fs::read_to_string(sox_config_cache) {
+	    toml::from_str::<TrackConfig>(&cfg_str)
+		.ok().map(|o| o.into()) // if invalid just regenerate anyway
+	} else {
+	    None
+	}
     }
 }
 
@@ -206,10 +210,10 @@ fn main() {
     fs::create_dir_all("target/tracks").unwrap(); // TODO cargo root
     for dir in fs::read_dir("tracks").unwrap()
 	.map(|res| res.map(|e| e.path()).unwrap()) {
-	    let mut new_dir_name = OsString::new();
-	    new_dir_name.push(OsStr::new("target/tracks/"));
-	    new_dir_name.push(dir.file_name().unwrap());
-	    fs::create_dir_all(new_dir_name).unwrap();
+	    let mut new_dir: PathBuf = ["target", "tracks"]
+		.iter().collect();
+	    new_dir.push(dir.file_name().unwrap());
+	    fs::create_dir_all(new_dir.into_os_string()).unwrap();
 	}
 
     
