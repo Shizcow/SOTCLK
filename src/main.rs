@@ -116,18 +116,25 @@ fn main() {
 				    "-r".into(), config.sox.sample_rate.to_string().into(),
 				    "-c".into(), config.sox.channels.to_string().into(),
 				    "-e".into(), config.sox.encoding.into()];
-	    if let Some(other_args) = config.sox.other_options {
+	    let other_n = if let Some(other_args) = config.sox.other_options {
 		let delineated = Command::new("sh")
 		    .arg("-c")
-		    .arg("for arg in *; do echo $arg; done")
-		    .arg("")
+		    .arg("for arg in $*; do echo $arg; done")
+		    .arg("sox")
 		    .arg(other_args)
 		    .output()
 		    .expect("Output command failed").stdout;
+		let mut other_n = 0;
 		for other_arg in delineated.split(|c| *c == '\n' as u8) {
+		    if other_arg.len() > 0 {
+			other_n += 1;
 			sox_args.push(OsStr::from_bytes(other_arg).to_os_string());
 		    }
-	    }
+		}
+		other_n
+	    } else {
+		0
+	    };
 	    sox_args.append(&mut vec!["-t".into(), "raw".into(),
 				      intermediate_name,
 				      "-t".into(), "flac".into(),
@@ -138,7 +145,7 @@ fn main() {
 	    
 	    println!("---> sox {}", sox_args.into_iter().enumerate()
 		     .map(|(i, arg)|
-			  if i == 10 || i == 13 {
+			  if i == 10+other_n || i == 13+other_n {
 			      "'".to_owned()
 				  + &format!("{}", String::from_utf8_lossy(arg.as_bytes()))
 				  .replace("'", "\\'")
