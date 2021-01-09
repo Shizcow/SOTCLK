@@ -5,6 +5,29 @@ use std::io::Write;
 use std::ffi::{OsStr, OsString};
 use std::os::unix::ffi::OsStrExt;
 
+struct TrackName {
+    name: OsString
+}
+
+impl TrackName {
+    pub fn new(name: &OsStr) -> Self {
+	Self {
+	    name: name.to_os_string(),
+	}
+    }
+}
+
+impl std::fmt::Display for TrackName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	write!(f, "{}", String::from_utf8_lossy(self.name.as_bytes()))
+    }
+}
+
+impl AsRef<OsStr> for &TrackName {
+    fn as_ref(&self) -> &OsStr {
+        &self.name
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 struct TrackConfig {
@@ -13,7 +36,7 @@ struct TrackConfig {
 }
 
 impl TrackConfig {
-    pub fn load_from_track(track_name: &OsString) -> Self {
+    pub fn load_from_track(track_name: &TrackName) -> Self {
 	let mut config_file: OsString = "tracks/".to_owned().into();
 	config_file.push(&track_name);
 	config_file.push(OsStr::new("/config.toml"));
@@ -22,7 +45,7 @@ impl TrackConfig {
 	    &fs::read_to_string(config_file).unwrap()
 	).unwrap()
     }
-    pub fn dump_raw(&self, track_name: &OsString) {
+    pub fn dump_raw(&self, track_name: &TrackName) {
 	let output = Command::new("sh")
 	    .arg("-c")
 	    .arg(&(self.track.output_command.clone()
@@ -38,7 +61,7 @@ impl TrackConfig {
 	let mut file = File::create(&intermediate_name).unwrap();
 	file.write_all(&output).unwrap();
     }
-    pub fn write_cache(&self, track_name: &OsString) {
+    pub fn write_cache(&self, track_name: &TrackName) {
 	let mut sox_config_cache: OsString = "target/tracks/".to_owned().into();
 	sox_config_cache.push(&track_name);
 	sox_config_cache.push(OsStr::new("/sox.toml"));
@@ -60,7 +83,7 @@ struct SoxConfig {
 }
 
 impl SoxConfig {
-    pub fn load_from_cache(track_name: &OsString) -> Option<Self> {
+    pub fn load_from_cache(track_name: &TrackName) -> Option<Self> {
 	let mut sox_config_cache: OsString = "target/tracks/".to_owned().into();
 	sox_config_cache.push(&track_name);
 	sox_config_cache.push(OsStr::new("/sox.toml"));
@@ -103,7 +126,7 @@ struct SoxArgs {
 }
 
 impl SoxArgs {
-    pub fn new(track_name: &OsString, config: &TrackConfig) -> Self {
+    pub fn new(track_name: &TrackName, config: &TrackConfig) -> Self {
 	let mut intermediate_name: OsString = "target/tracks/".to_owned().into();
 	intermediate_name.push(&track_name);
 	intermediate_name.push(OsStr::new("/intermediate.raw"));
@@ -192,10 +215,9 @@ fn main() {
     
     println!("Building tracks...");
     for track_name in fs::read_dir("tracks").unwrap()
-	.map(|res| res.map(|e| e.path()).unwrap().file_name().unwrap().to_owned()){
+	.map(|res| TrackName::new(res.map(|e| e.path()).unwrap().file_name().unwrap())) {
 	    
-	    println!("-> Building track {}",
-		     String::from_utf8_lossy(track_name.as_bytes()));
+	    println!("-> Building track {}", track_name);
 	    
 	    println!("--> Loading config file");
 	    let config = TrackConfig::load_from_track(&track_name);
