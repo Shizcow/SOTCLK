@@ -18,7 +18,7 @@ struct Sox {
     sample_rate: u32,
     channels: u32,
     encoding: String,
-    other_options: Option<Vec<String>>,
+    other_options: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -83,7 +83,7 @@ fn main() {
 		file.write_all(current_sox_config_str.as_bytes()).unwrap();
 	    } else {
 		println!("--> Build files up to date; continuing");
-		continue;
+		//continue;
 	    }
 
 	    println!("--> Running output command and dumping data");
@@ -117,9 +117,16 @@ fn main() {
 				    "-c".into(), config.sox.channels.to_string().into(),
 				    "-e".into(), config.sox.encoding.into()];
 	    if let Some(other_args) = config.sox.other_options {
-		for other_arg in other_args {
-		    sox_args.push(other_arg.into());
-		}
+		let delineated = Command::new("sh")
+		    .arg("-c")
+		    .arg("for arg in *; do echo $arg; done")
+		    .arg("")
+		    .arg(other_args)
+		    .output()
+		    .expect("Output command failed").stdout;
+		for other_arg in delineated.split(|c| *c == '\n' as u8) {
+			sox_args.push(OsStr::from_bytes(other_arg).to_os_string());
+		    }
 	    }
 	    sox_args.append(&mut vec!["-t".into(), "raw".into(),
 				      intermediate_name,
