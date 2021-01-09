@@ -1,0 +1,12 @@
+[track]
+name = "ls -R /"
+# build_command = "" # not required here
+output_command = "ls -R /"
+output_buffer = "1k" # how much initial data to capture
+
+[sox]
+bit_depth = 8
+sample_rate = 48000
+channels = 1
+encoding = "unsigned"
+# other_options = "" # optional
