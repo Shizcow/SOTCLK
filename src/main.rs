@@ -3,6 +3,7 @@ use std::process::Command;
 use std::fs::{self, File};
 use std::io::Write;
 use std::ffi::{OsStr, OsString};
+use std::os::unix::ffi::OsStrExt;
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -30,6 +31,7 @@ struct Track {
 
 fn main() {
     // create track directories
+    println!("Creating build directories...");
     fs::create_dir_all("target/tracks").unwrap(); // TODO cargo root
     for dir in fs::read_dir("tracks").unwrap()
 	.map(|res| res.map(|e| e.path()).unwrap()) {
@@ -40,10 +42,18 @@ fn main() {
 	}
 
     
+    println!("Building tracks...");
     for track_name in fs::read_dir("tracks").unwrap()
-	.map(|res| res.map(|e| e.path()).unwrap().file_name().unwrap().to_owned()) {
+	.map(|res| res.map(|e| e.path()).unwrap().file_name().unwrap().to_owned()){
+	    
+	    println!("-> Building track {}",
+		     String::from_utf8_lossy(track_name.as_bytes()));
+	    
 	    let mut source_dir_name: OsString = "tracks/".to_owned().into();
 	    source_dir_name.push(&track_name);
+
+	    
+	    println!("--> Loading config file");
 	    
 	    // load a toml file
 	    let mut config_file = OsString::new();
@@ -53,6 +63,8 @@ fn main() {
 	    let config: TrackConfig = toml::from_str(
 		&fs::read_to_string(config_file).unwrap()
 	    ).unwrap();
+
+	    println!("--> Checking build cache");
 
 	    // Check if output needs to be regenerated
 	    let mut sox_config_cache: OsString = "target/tracks/".to_owned().into();
@@ -70,10 +82,11 @@ fn main() {
 		let mut file = File::create(&sox_config_cache).unwrap();
 		file.write_all(current_sox_config_str.as_bytes()).unwrap();
 	    } else {
+		println!("--> Build files up to date; continuing");
 		continue;
 	    }
 
-	    println!("prawsec");
+	    println!("--> Running output command and dumping data");
 
 	    let output = Command::new("sh")
 		.arg("-c")
@@ -96,6 +109,8 @@ fn main() {
 
 	    // finish
 	    
+	    println!("--> Piping through sox");
+	    
 	    let mut sox_cmd = Command::new("sox");
 	    sox_cmd.args(&["-b", config.sox.bit_depth.to_string().as_str()])
 		.args(&["-r", config.sox.sample_rate.to_string().as_str()])
@@ -114,8 +129,13 @@ fn main() {
 	    let sox_output = sox_cmd.output()
 		.expect("Sox command failed");
 
-	    println!("{}", String::from_utf8_lossy(&sox_output.stderr));
+	    if !sox_output.status.success() {
+		eprintln!("{}", String::from_utf8_lossy(&sox_output.stderr));
+		panic!("Sox command failed");
+	    }
+	    
+	    println!("--> Finished processing track '{}'", config.track.name);
 	}
 
-    
+    println!("Done");
 }
