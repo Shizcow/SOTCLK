@@ -1,17 +1,17 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::fs::{self, File};
 use std::io::Write;
 use std::ffi::{OsStr, OsString};
 
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct TrackConfig {
     track: Track,
     sox: Sox,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Sox {
     bit_depth: u32,
     sample_rate: u32,
@@ -20,7 +20,7 @@ struct Sox {
     other_options: Option<Vec<String>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Track {
     name: String,
     build_command: Option<String>,
@@ -53,6 +53,27 @@ fn main() {
 	    let config: TrackConfig = toml::from_str(
 		&fs::read_to_string(config_file).unwrap()
 	    ).unwrap();
+
+	    // Check if output needs to be regenerated
+	    let mut sox_config_cache: OsString = "target/tracks/".to_owned().into();
+	    sox_config_cache.push(&track_name);
+	    sox_config_cache.push(OsStr::new("/sox.toml"));
+	    
+	    let current_sox_config_str = format!(
+		"[track]\n{}\n[sox]\n{}",
+		toml::to_string(&config.track).unwrap(),
+		toml::to_string(&config.sox).unwrap());
+	    let old_sox_config_str = &fs::read_to_string(&sox_config_cache)
+		.unwrap_or("".to_owned());
+
+	    if &current_sox_config_str != old_sox_config_str {
+		let mut file = File::create(&sox_config_cache).unwrap();
+		file.write_all(current_sox_config_str.as_bytes()).unwrap();
+	    } else {
+		continue;
+	    }
+
+	    println!("prawsec");
 
 	    let output = Command::new("sh")
 		.arg("-c")
