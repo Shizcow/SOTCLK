@@ -2,6 +2,8 @@ use serde::Deserialize;
 use std::process::Command;
 use std::fs::{self, File};
 use std::io::Write;
+use std::ffi::{OsStr, OsString};
+
 
 #[derive(Deserialize, Debug)]
 struct TrackConfig {
@@ -27,19 +29,44 @@ struct Track {
 }
 
 fn main() {
-    // load a toml file
-    let config: TrackConfig = toml::from_str(
-	&fs::read_to_string("tracks/ls/config.toml").unwrap()
-    ).unwrap();
+    // create track directories
+    fs::create_dir_all("target/tracks").unwrap(); // TODO cargo root
+    for dir in fs::read_dir("tracks").unwrap()
+	.map(|res| res.map(|e| e.path()).unwrap()) {
+	    let mut new_dir_name = OsString::new();
+	    new_dir_name.push(OsStr::new("target/tracks/"));
+	    new_dir_name.push(dir.file_name().unwrap());
+	    fs::create_dir_all(new_dir_name).unwrap();
+	}
 
-    let output = Command::new("sh")
-	.arg("-c")
-	.arg(&(config.track.output_command.clone()
-	       + " | head --bytes="
-	       + &config.track.output_buffer))
-        .output()
-        .expect("Output command failed").stdout;
     
-    let mut file = File::create("output.raw").unwrap();
-    file.write_all(&output).unwrap();
+    for track_name in fs::read_dir("tracks").unwrap()
+	.map(|res| res.map(|e| e.path()).unwrap().file_name().unwrap().to_owned()) {
+	    let mut source_dir_name: OsString = "tracks/".to_owned().into();
+	    source_dir_name.push(&track_name);
+	    
+	    // load a toml file
+	    let mut config_file = OsString::new();
+	    config_file.push(source_dir_name);
+	    config_file.push(OsStr::new("/config.toml"));
+	    
+	    let config: TrackConfig = toml::from_str(
+		&fs::read_to_string(config_file).unwrap()
+	    ).unwrap();
+
+	    let output = Command::new("sh")
+		.arg("-c")
+		.arg(&(config.track.output_command.clone()
+		       + " | head --bytes="
+		       + &config.track.output_buffer))
+		.output()
+		.expect("Output command failed").stdout;
+	    
+	    let mut intermediate_name: OsString = "target/tracks/".to_owned().into();
+	    intermediate_name.push(track_name);
+	    intermediate_name.push(OsStr::new("/intermediate.raw"));
+	    
+	    let mut file = File::create(intermediate_name).unwrap();
+	    file.write_all(&output).unwrap();
+	}
 }
