@@ -1,3 +1,5 @@
+#![feature(command_access)]
+
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::fs::{self, File};
@@ -87,6 +89,7 @@ fn main() {
 	    }
 
 	    println!("--> Running output command and dumping data");
+	    println!("---> {}", &config.track.output_command);
 
 	    let output = Command::new("sh")
 		.arg("-c")
@@ -125,6 +128,18 @@ fn main() {
 		.arg(intermediate_name)
 		.args(&["-t", "flac"])
 		.arg(final_name);
+	    
+	    println!("---> sox {}", sox_cmd.get_args().into_iter().enumerate()
+		     .map(|(i, arg)|
+			  if i == 10 || i == 13 {
+			      "'".to_owned()
+				  + &format!("{}", String::from_utf8_lossy(arg.as_bytes()))
+				  .replace("'", "\\'")
+				  + "'"
+			  } else {
+			      format!("{}", String::from_utf8_lossy(arg.as_bytes()))
+			  })
+		     .collect::<Vec<String>>().join(" "));
 
 	    let sox_output = sox_cmd.output()
 		.expect("Sox command failed");
