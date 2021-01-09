@@ -1,0 +1,7 @@
+[package]
+name = "sotclk"
+version = "0.1.0"
+authors = ["Shizcow <pohl.devin@gmail.com>"]
+edition = "2018"
+
+[dependencies]
