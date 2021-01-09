@@ -1,5 +1,3 @@
-#![feature(command_access)]
-
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::fs::{self, File};
@@ -113,23 +111,25 @@ fn main() {
 	    // finish
 	    
 	    println!("--> Piping through sox");
-	    
-	    let mut sox_cmd = Command::new("sox");
-	    sox_cmd.args(&["-b", config.sox.bit_depth.to_string().as_str()])
-		.args(&["-r", config.sox.sample_rate.to_string().as_str()])
-		.args(&["-c", config.sox.channels.to_string().as_str()])
-		.args(&["-e", config.sox.encoding.as_str()]);
+
+	    let mut sox_args: Vec<OsString> = vec!["-b".into(), config.sox.bit_depth.to_string().into(),
+				    "-r".into(), config.sox.sample_rate.to_string().into(),
+				    "-c".into(), config.sox.channels.to_string().into(),
+				    "-e".into(), config.sox.encoding.into()];
 	    if let Some(other_args) = config.sox.other_options {
 		for other_arg in other_args {
-		    sox_cmd.arg(other_arg);
+		    sox_args.push(other_arg.into());
 		}
 	    }
-	    sox_cmd.args(&["-t", "raw"])
-		.arg(intermediate_name)
-		.args(&["-t", "flac"])
-		.arg(final_name);
+	    sox_args.append(&mut vec!["-t".into(), "raw".into(),
+				      intermediate_name,
+				      "-t".into(), "flac".into(),
+				      final_name]);
 	    
-	    println!("---> sox {}", sox_cmd.get_args().into_iter().enumerate()
+	    let mut sox_cmd = Command::new("sox");
+	    sox_cmd.args(&sox_args);
+	    
+	    println!("---> sox {}", sox_args.into_iter().enumerate()
 		     .map(|(i, arg)|
 			  if i == 10 || i == 13 {
 			      "'".to_owned()
