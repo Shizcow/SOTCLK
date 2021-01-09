@@ -4,7 +4,6 @@ use std::fs::{self, File};
 use std::path::PathBuf;
 use std::io::Write;
 use std::ffi::{OsStr, OsString};
-use std::os::unix::ffi::OsStrExt;
 
 struct TrackName {
     name: OsString
@@ -51,7 +50,7 @@ impl TrackName {
 
 impl std::fmt::Display for TrackName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-	write!(f, "{}", String::from_utf8_lossy(self.name.as_bytes()))
+	write!(f, "{}", self.name.to_string_lossy())
     }
 }
 
@@ -151,19 +150,19 @@ impl SoxArgs {
 					       "-c".into(), config.sox.channels.to_string().into(),
 					       "-e".into(), config.sox.encoding.clone().into()];
 	let other_n = if let Some(other_args) = &config.sox.other_options {
-	    let delineated = Command::new("sh")
+	    let bytes = Command::new("sh")
 		.arg("-c")
 		.arg("for arg in $*; do echo $arg; done")
 		.arg("sox")
 		.arg(other_args)
 		.output()
 		.expect("Output command failed").stdout;
+	    let delineated = // virtually guarenteed to be lossless
+		String::from_utf8_lossy(&bytes);
 	    let mut other_n = 0;
-	    for other_arg in delineated.split(|c| *c == '\n' as u8) {
-		if other_arg.len() > 0 {
-		    other_n += 1;
-		    sox_args.push(OsStr::from_bytes(other_arg).to_os_string());
-		}
+	    for other_arg in delineated.lines() {
+		other_n += 1;
+		sox_args.push(other_arg.to_string().into());
 	    }
 	    other_n
 	} else {
@@ -201,11 +200,11 @@ impl std::fmt::Display for SoxArgs {
 	       .map(|(i, arg)|
 		    if i == 10+self.buffer_args_n || i == 13+self.buffer_args_n {
 			"'".to_owned()
-			    + &format!("{}", String::from_utf8_lossy(arg.as_bytes()))
+			    + &format!("{}", arg.to_string_lossy())
 			    .replace("'", "\\'")
 			    + "'"
 		    } else {
-			format!("{}", String::from_utf8_lossy(arg.as_bytes()))
+			format!("{}", arg.to_string_lossy())
 		    })
 	       .collect::<Vec<String>>().join(" "))
     }
