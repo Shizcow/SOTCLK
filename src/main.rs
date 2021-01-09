@@ -76,18 +76,7 @@ fn main() {
 	    
 	    let sox_args = create_sox_args(&track_name, &config);
 	    
-	    let mut sox_cmd = Command::new("sox");
-	    sox_cmd.args(&sox_args.args);
-
-	    log_cmd(&sox_args);
-
-	    let sox_output = sox_cmd.output()
-		.expect("Sox command failed");
-
-	    if !sox_output.status.success() {
-		eprintln!("{}", String::from_utf8_lossy(&sox_output.stderr));
-		panic!("Sox command failed");
-	    }
+	    dump_sox(sox_args);
 	    
 	    println!("--> Finished processing track '{}'", config.track.name);
 	}
@@ -200,5 +189,20 @@ fn create_sox_args(track_name: &OsString, config: &TrackConfig) -> SoxArgs {
     SoxArgs{
 	args: sox_args,
 	buffer_args_n: other_n,
+    }
+}
+
+fn dump_sox(sox_args: SoxArgs) {
+    let mut sox_cmd = Command::new("sox");
+    sox_cmd.args(&sox_args.args);
+
+    log_cmd(&sox_args);
+
+    let sox_output = sox_cmd.output()
+	.expect("Sox command failed");
+
+    if !sox_output.status.success() {
+	eprintln!("{}", String::from_utf8_lossy(&sox_output.stderr));
+	panic!("Sox command failed");
     }
 }
