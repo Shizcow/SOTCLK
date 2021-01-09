@@ -16,6 +16,37 @@ impl TrackName {
 	    name: name.to_os_string(),
 	}
     }
+    pub fn config_file(&self) -> PathBuf {
+	let mut pb = PathBuf::new();
+	pb.push("tracks");
+	pb.push(&self.name);
+	pb.push("config.toml");
+	pb
+    }
+    pub fn intermediate_file(&self) -> PathBuf {
+	let mut pb = PathBuf::new();
+	pb.push("target");
+	pb.push("tracks");
+	pb.push(&self.name);
+	pb.push("intermediate.raw");
+	pb
+    }
+    pub fn final_file(&self) -> PathBuf {
+	let mut pb = PathBuf::new();
+	pb.push("target");
+	pb.push("tracks");
+	pb.push(&self.name);
+	pb.push("final.flac");
+	pb
+    }
+    pub fn sox_config_cache(&self) -> PathBuf {
+	let mut pb = PathBuf::new();
+	pb.push("target");
+	pb.push("tracks");
+	pb.push(&self.name);
+	pb.push("sox.toml");
+	pb
+    }
 }
 
 impl std::fmt::Display for TrackName {
@@ -38,12 +69,8 @@ struct TrackConfig {
 
 impl TrackConfig {
     pub fn load_from_track(track_name: &TrackName) -> Self {
-	let mut config_file: OsString = "tracks/".to_owned().into();
-	config_file.push(&track_name);
-	config_file.push(OsStr::new("/config.toml"));
-	
 	toml::from_str(
-	    &fs::read_to_string(config_file).unwrap()
+	    &fs::read_to_string(track_name.config_file()).unwrap()
 	).unwrap()
     }
     pub fn dump_raw(&self, track_name: &TrackName) {
@@ -55,24 +82,16 @@ impl TrackConfig {
 	    .output()
 	    .expect("Output command failed").stdout;
 	
-	let mut intermediate_name: OsString = "target/tracks/".to_owned().into();
-	intermediate_name.push(&track_name);
-	intermediate_name.push(OsStr::new("/intermediate.raw"));
-	
-	let mut file = File::create(&intermediate_name).unwrap();
+	let mut file = File::create(track_name.intermediate_file()).unwrap();
 	file.write_all(&output).unwrap();
     }
     pub fn write_cache(&self, track_name: &TrackName) {
-	let mut sox_config_cache: OsString = "target/tracks/".to_owned().into();
-	sox_config_cache.push(&track_name);
-	sox_config_cache.push(OsStr::new("/sox.toml"));
-	
 	let current_sox_config_str = format!(
 	    "[track]\n{}\n[sox]\n{}",
 	    toml::to_string(&self.track).unwrap(),
 	    toml::to_string(&self.sox).unwrap());
 	
-	let mut file = File::create(&sox_config_cache).unwrap();
+	let mut file = File::create(track_name.sox_config_cache()).unwrap();
 	file.write_all(current_sox_config_str.as_bytes()).unwrap();
     }
 }
@@ -85,11 +104,7 @@ struct SoxConfig {
 
 impl SoxConfig {
     pub fn load_from_cache(track_name: &TrackName) -> Option<Self> {
-	let mut sox_config_cache: OsString = "target/tracks/".to_owned().into();
-	sox_config_cache.push(&track_name);
-	sox_config_cache.push(OsStr::new("/sox.toml"));
-
-	if let Ok(cfg_str) = fs::read_to_string(sox_config_cache) {
+	if let Ok(cfg_str) = fs::read_to_string(track_name.sox_config_cache()) {
 	    toml::from_str::<TrackConfig>(&cfg_str)
 		.ok().map(|o| o.into()) // if invalid just regenerate anyway
 	} else {
@@ -131,14 +146,6 @@ struct SoxArgs {
 
 impl SoxArgs {
     pub fn new(track_name: &TrackName, config: &TrackConfig) -> Self {
-	let mut intermediate_name: OsString = "target/tracks/".to_owned().into();
-	intermediate_name.push(&track_name);
-	intermediate_name.push(OsStr::new("/intermediate.raw"));
-	
-	let mut final_name: OsString = "target/tracks/".to_owned().into();
-	final_name.push(track_name);
-	final_name.push(OsStr::new("/final.flac"));
-
 	let mut sox_args: Vec<OsString> = vec!["-b".into(), config.sox.bit_depth.to_string().into(),
 					       "-r".into(), config.sox.sample_rate.to_string().into(),
 					       "-c".into(), config.sox.channels.to_string().into(),
@@ -163,9 +170,9 @@ impl SoxArgs {
 	    0
 	};
 	sox_args.append(&mut vec!["-t".into(), "raw".into(),
-				  intermediate_name,
+				  track_name.intermediate_file().into_os_string(),
 				  "-t".into(), "flac".into(),
-				  final_name]);
+				  track_name.final_file().into_os_string()]);
 
 	Self {
 	    args: sox_args,
