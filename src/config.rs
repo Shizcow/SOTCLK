@@ -298,7 +298,44 @@ impl Build {
 			"Git clone failed");
 		out_of_date = true;
 	    } else {
-		panic!("Check for git update");
+		assert!(Command::new("git")
+		    .arg("remote")
+		    .arg("update")
+		    .current_dir(&git_dir)
+		    .stdout(Stdio::inherit())
+		    .stderr(Stdio::inherit())
+		    .output()
+		    .expect("Git remote failed").status.success(),
+			"Git remote failed");
+		let git_status = Command::new("git")
+		    .arg("status")
+		    .arg("-uno")
+		    .current_dir(&git_dir)
+		    .output()
+		    .expect("Git status failed");
+		assert!(git_status.status.success(),
+			"Git status failed");
+		if String::from_utf8_lossy(&git_status.stdout)
+		    .lines().nth(1).unwrap_or("").starts_with("Your branch is behind") {
+			out_of_date = true;
+			assert!(Command::new("git")
+				.arg("reset")
+				.arg("--hard")
+				.current_dir(&git_dir)
+				.stdout(Stdio::inherit())
+				.stderr(Stdio::inherit())
+				.output()
+				.expect("Git reset failed").status.success(),
+				"Git reset failed");
+			assert!(Command::new("git")
+				.arg("pull")
+				.current_dir(&git_dir)
+				.stdout(Stdio::inherit())
+				.stderr(Stdio::inherit())
+				.output()
+				.expect("Git pull failed").status.success(),
+				"Git pull failed");
+		    }
 	    }
 	}
 	out_of_date
