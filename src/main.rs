@@ -34,9 +34,11 @@ fn main() {
 		if config.needs_build_update {
 		    build_cfg.write_cache(&track_name);
 		    build_cfg.create_dir(&track_name);
-		    println!("--> Running build command");
-		    println!("---> {}", build_cfg.build_command);
-		    build_cfg.run(&track_name);
+		    if build_cfg.build_command.len() > 0 {
+			println!("--> Running build command");
+			println!("---> {}", build_cfg.build_command);
+			build_cfg.run(&track_name);
+		    }
 		} else {
 		    println!("--> Build files up to date; continuing");
 		}
