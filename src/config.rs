@@ -180,6 +180,7 @@ pub struct Build {
     pub build_command: String,
     pub http_sources: Vec<String>,
     pub git_sources: Vec<String>,
+    pub always_rebuild: Option<bool>,
 }
 
 impl Cache for Build {
@@ -206,7 +207,7 @@ impl Build {
 	fs::create_dir_all(track_name.dest_dir().join("http").into_os_string()).unwrap();
     }
     pub fn run(&self, track_name: &TrackName) -> bool { // is out of date
-	if Self::build_lock_file(track_name).exists() {
+	if !self.always_rebuild.unwrap_or(false) && Self::build_lock_file(track_name).exists() {
 	    println!("--> Build up to date");
 	    return false;
 	}

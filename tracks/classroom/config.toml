@@ -14,6 +14,7 @@ encoding = "unsigned"
 
 # optional
 [build]
+#always_rebuild = true # optional
 build_command = "unzip -u classroom.zip"
 http_sources = [
         "https://download.blender.org/demo/test/classroom.zip",
