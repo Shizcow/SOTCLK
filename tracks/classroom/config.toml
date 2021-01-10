@@ -1,7 +1,7 @@
 [output]
 name = "classroom.blend"
 output_command = "cat classroom/classroom.blend"
-output_buffer = "1k" # how much initial data to capture
+output_buffer = "1M" # how much initial data to capture
 #debug = true # option, false by default
 cache = true # option, true by default
 
