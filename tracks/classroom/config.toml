@@ -2,7 +2,7 @@
 name = "classroom.blend"
 output_command = "cat classroom/classroom.blend"
 output_buffer = "1k" # how much initial data to capture
-#debug = true
+#debug = true # option, false by default
 cache = false # option, false by default
 
 [sox]

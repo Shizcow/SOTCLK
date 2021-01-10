@@ -87,6 +87,9 @@ impl TrackData {
 	    cmd.stdout(Stdio::inherit())
 		.stderr(Stdio::inherit());
 	}
+	if self.build().is_some() {
+	    cmd.current_dir(track_name.dest_dir().join("build"));
+	}
 
 	let output = cmd.output()
 	    .expect("Output command failed");
