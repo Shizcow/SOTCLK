@@ -1,6 +1,7 @@
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 
+#[derive(Debug)]
 pub struct TrackName {
     name: OsString
 }

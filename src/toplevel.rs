@@ -8,6 +8,12 @@ use crate::track_name::TrackName;
 use crate::cache::Cache;
 use crate::clip::ClipProcess;
 
+pub fn clean_arg(matches: &clap::ArgMatches) {
+    let track_name = TrackName::new_from_arg(matches);
+    println!("Cleaning cache for track {}", track_name.get_name());
+    std::fs::remove_dir_all(track_name.dest_dir()).ok(); // empty cache
+}
+
 pub fn play_arg(matches: &clap::ArgMatches) {
     println!("Playing via mpv...");
     let track_name = TrackName::new_from_arg(matches);

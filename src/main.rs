@@ -9,8 +9,6 @@ mod toplevel;
 use clap::{Arg, App, SubCommand, AppSettings};
 
 fn main() {
-    toplevel::setup_directories();
-
     let track_arg = Arg::with_name("track")
 	.index(1)
 	.required(true)
@@ -27,16 +25,24 @@ fn main() {
         .subcommand(SubCommand::with_name("play")
                     .about("Build and play a track using mpv")
                     .arg(track_arg.clone()))
+        .subcommand(SubCommand::with_name("clean")
+                    .about("Wipe the cache of a track, triggering a rebuild")
+                    .arg(track_arg.clone()))
         .get_matches();
 
-    if let Some(matches) = matches.subcommand_matches("build") {
-	toplevel::build_arg(matches);
-    } else if let Some(_) = matches.subcommand_matches("build-all") {
-	println!("Building tracks...");
-	toplevel::process_tracks();
-    } else if let Some(matches) = matches.subcommand_matches("play") {
-	toplevel::build_arg(matches);
-	toplevel::play_arg(matches);
+    if let Some(matches) = matches.subcommand_matches("clean") {
+	toplevel::clean_arg(matches);
+    } else {
+	toplevel::setup_directories();
+	if let Some(matches) = matches.subcommand_matches("build") {
+	    toplevel::build_arg(matches);
+	} else if let Some(_) = matches.subcommand_matches("build-all") {
+	    println!("Building tracks...");
+	    toplevel::process_tracks();
+	} else if let Some(matches) = matches.subcommand_matches("play") {
+	    toplevel::build_arg(matches);
+	    toplevel::play_arg(matches);
+	}
     }
 
     println!("Done");
