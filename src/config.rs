@@ -3,7 +3,9 @@ use std::process::{Command, Stdio};
 use std::fs::{self, File};
 use std::io::Write;
 
-use crate::{TrackName, Build, Clips, ClipsOpt};
+use crate::clip::{Clips, ClipsOpt};
+use crate::track_name::TrackName;
+use crate::build::Build;
 use crate::cache::Cache;
 
 

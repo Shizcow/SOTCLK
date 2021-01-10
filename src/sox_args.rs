@@ -1,7 +1,8 @@
 use std::process::Command;
 use std::ffi::OsString;
 
-use crate::{TrackName, TrackData};
+use crate::config::TrackData;
+use crate::track_name::TrackName;
 
 pub struct SoxArgs {
     args: Vec<OsString>,

@@ -6,7 +6,9 @@ use std::time::SystemTime;
 use std::fs::{self, File, metadata};
 use curl::easy::Easy;
 
-use crate::{TrackName, TrackConfig, cache::Cache};
+use crate::config::TrackConfig;
+use crate::track_name::TrackName;
+use crate::cache::Cache;
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Build {

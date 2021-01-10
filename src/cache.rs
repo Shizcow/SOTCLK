@@ -3,7 +3,8 @@ use serde::de::DeserializeOwned;
 use std::fs::{self, File};
 use std::io::Write;
 
-use crate::{TrackName, TrackConfig};
+use crate::config::TrackConfig;
+use crate::track_name::TrackName;
 
 pub trait Cache {
     fn load_from_cache(track_name: &TrackName) -> Option<Self>
