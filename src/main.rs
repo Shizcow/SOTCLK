@@ -34,6 +34,14 @@ fn main() {
 		if config.needs_build_update {
 		    build_cfg.write_cache(&track_name);
 		    build_cfg.create_dir(&track_name);
+		    if build_cfg.git_sources.len() > 0 {
+			println!("--> Downloading git sources");
+			build_cfg.git(&track_name);
+		    }
+		    if build_cfg.http_sources.len() > 0 {
+			println!("--> Downloading http sources");
+			build_cfg.http(&track_name);
+		    }
 		    if build_cfg.build_command.len() > 0 {
 			println!("--> Running build command");
 			println!("---> {}", build_cfg.build_command);
@@ -46,9 +54,9 @@ fn main() {
 
 	    println!("--> Checking raw cache");
 	    if config.needs_raw_update {
-		config.track().write_cache(&track_name);
+		config.output().write_cache(&track_name);
 		println!("--> Running output command and dumping data");
-		println!("---> {}", &config.track().output_command);
+		println!("---> {}", &config.output().output_command);
 		config.dump_raw(&track_name);
 	    } else {
 		println!("--> Output generation up to date; continuing");
@@ -64,7 +72,7 @@ fn main() {
 		println!("--> Sox output up to date; continuing");
 	    }
 	    
-	    println!("--> Finished processing track '{}'", config.track().name);
+	    println!("--> Finished processing track '{}'", config.output().name);
 	}
 
     println!("Done");

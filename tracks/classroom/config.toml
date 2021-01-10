@@ -1,7 +1,8 @@
 [output]
 name = "classroom.blend"
-output_command = "cat classroom.blend"
-output_buffer = "5M" # how much initial data to capture
+output_command = "cat classroom/classroom.blend"
+output_buffer = "1k" # how much initial data to capture
+#debug = true
 cache = false # option, false by default
 
 [sox]
@@ -13,10 +14,8 @@ encoding = "unsigned"
 
 # optional
 [build]
-build_command = ""
+build_command = "unzip -u classroom.zip"
 http_sources = [
         "https://download.blender.org/demo/test/classroom.zip",
 ]
-git_sources = [
-        "",
-]
+git_sources = []

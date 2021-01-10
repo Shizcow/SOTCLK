@@ -77,18 +77,24 @@ impl TrackData {
 	}
     }
     pub fn dump_raw(&self, track_name: &TrackName) {
-	let output = Command::new("sh")
-	    .arg("-c")
+	let mut cmd = Command::new("sh");
+	cmd.arg("-c")
 	    .arg(&(self.track_config.output.output_command.clone()
 		   + " | head --bytes="
-		   + &self.track_config.output.output_buffer))
-	    .output()
-	    .expect("Output command failed").stdout;
+		   + &self.track_config.output.output_buffer));
+
+	if self.output().debug == Some(true) {
+	    cmd.stdout(Stdio::inherit())
+		.stderr(Stdio::inherit());
+	}
+
+	let output = cmd.output()
+	    .expect("Output command failed");
 	
 	let mut file = File::create(track_name.dest_dir().join("intermediate.raw")).unwrap();
-	file.write_all(&output).unwrap();
+	file.write_all(&output.stdout).unwrap();
     }
-    pub fn track(&self) -> &Output {
+    pub fn output(&self) -> &Output {
 	&self.track_config.output
     }
     pub fn sox(&self) -> &Sox {
@@ -125,6 +131,7 @@ pub struct Output {
     pub name: String,
     pub build_command: Option<String>,
     pub cache: Option<bool>,
+    pub debug: Option<bool>,
     pub output_command: String,
     pub output_buffer: String,
 }
@@ -175,5 +182,30 @@ impl Build {
 		.output()
 		.expect("Build command failed").status.success(),
 		"Build command failed");
+    }
+    pub fn git(&self, track_name: &TrackName) {
+	for source in &self.git_sources {
+	    assert!(Command::new("git")
+		    .arg("clone")
+		    .arg(source)
+		    .current_dir(track_name.dest_dir().join("build"))
+		    .stdout(Stdio::inherit())
+		    .stderr(Stdio::inherit())
+		    .output()
+		    .expect("Git clone failed").status.success(),
+		    "Git clone failed");
+	}
+    }
+    pub fn http(&self, track_name: &TrackName) {
+	for source in &self.http_sources {
+	    assert!(Command::new("wget")
+		    .arg(source)
+		    .current_dir(track_name.dest_dir().join("build"))
+		    .stdout(Stdio::inherit())
+		    .stderr(Stdio::inherit())
+		    .output()
+		    .expect("Git clone failed").status.success(),
+		    "Git clone failed");
+	}
     }
 }
