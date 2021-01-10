@@ -23,11 +23,14 @@ impl TrackName {
 	pb.push("tracks");
 	pb.push(&self.name);
 	pb
-   } 
+    } 
     pub fn build_dir(&self) -> PathBuf {
 	let mut pb = self.dest_dir();
 	pb.push("build");
 	pb
+    }
+    pub fn get_name(&self) -> String {
+	self.name.to_string_lossy().to_string()
     }
 }
 
