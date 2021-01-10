@@ -1,12 +1,12 @@
 [output]
 name = "sbcl build"
 output_command = "cd sbcl && git reset --hard > /dev/null && sh make.sh 'clisp'"
-output_buffer = "5k" # how much initial data to capture
+output_buffer = "100k" # how much initial data to capture
 
 [sox]
 bit_depth = 8
-sample_rate = 44000
-channels = 2
+sample_rate = 11000
+channels = 1
 encoding = "unsigned"
 #other_options = "" # optional
 
