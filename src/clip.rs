@@ -38,6 +38,8 @@ impl ClipProcess for Clips {
 		    .expect("cp failed. Aborting.").status.success(),
 		    "cp failed. Aborting.");
 	} else {
+	    println!("--> Editing with ffmpeg");
+	    
 	    // check clips for "absolute"/"relative" correctness
 	    for clip in self.iter() {
 		match clip.position.as_str() {
@@ -70,6 +72,11 @@ impl ClipProcess for Clips {
 			    clip.end.signed_duration_since(NaiveTime::from_hms(0, 0, 0))
 			    .num_seconds())
 		}).collect::<Vec<String>>().join("+"));
+
+	    println!("---> ffmpeg -i {} -af {} {}",
+		     track_name.dest_dir().join(TrackData::unprocessed_filename()).clone().into_os_string().to_string_lossy(),
+		     filter_arg,
+		     track_name.dest_dir().join(TrackData::processed_filename()).clone().into_os_string().to_string_lossy());
 
 	    
 	    assert!(Command::new("ffmpeg")

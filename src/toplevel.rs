@@ -86,8 +86,7 @@ pub fn build_track(track_name: TrackName) {
 
     if config.updates.needs_ffmpeg_update {
 	config.clips().write_cache(&track_name);
-	println!("--> Editing with ffmpeg");
-	config.clips().process(&track_name);
+	config.clips().process(&track_name); // edit message is displayed internally, if required
     }
     
     println!("--> Finished processing track '{}'", config.output().name);
