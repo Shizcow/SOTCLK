@@ -78,7 +78,7 @@ impl TrackData {
 		      != Some(track_config.clone().into()))
 		|| !track_name.dest_dir().join(TrackData::unprocessed_filename()).exists(),
 	};
-
+	
 	let needs_ffmpeg_update = match needs_preprocessed_update {
 	    true => true,
 	    false => (ClipsOpt::load_from_cache(&track_name)

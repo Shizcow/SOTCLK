@@ -29,14 +29,21 @@ impl ClipProcess for Clips {
     fn process(mut self, track_name: &TrackName) {
 	std::fs::remove_file(track_name.dest_dir().join(TrackData::processed_filename())).ok();
 	if self.len() == 0 {
-	    assert!(Command::new("cp")
+	    // Re-encoding fixes any potential errors that sox may encounter
+	    // It's pretty fast for flac anyway
+	    // https://gist.github.com/jgehrcke/5572c50bedf998a1fae40a80afa80357#file-flac-reencode-py-L24-L29
+	    println!("---> ffmpeg -i {} {}",
+		     track_name.dest_dir().join(TrackData::unprocessed_filename()).clone().into_os_string().to_string_lossy(),
+		     track_name.dest_dir().join(TrackData::processed_filename()).clone().into_os_string().to_string_lossy());
+	    assert!(Command::new("ffmpeg")
+		    .arg("-i")
 		    .arg(track_name.dest_dir().join(TrackData::unprocessed_filename()))
 		    .arg(track_name.dest_dir().join(TrackData::processed_filename()))
 		    .stdout(Stdio::inherit())
 		    .stderr(Stdio::inherit())
 		    .output()
-		    .expect("cp failed. Aborting.").status.success(),
-		    "cp failed. Aborting.");
+		    .expect("ffmpeg failed. Aborting.").status.success(),
+		    "ffmpeg failed. Aborting.");
 	} else {
 	    println!("--> Editing with ffmpeg");
 	    

@@ -11,11 +11,11 @@ encoding = "unsigned"
 #other_options = "" # optional
 
 [[clip]]
-start = "0:00:03" # %T format
-end = "0:0:05" # end is absolute too!
+start = "0:00:01" # %T format
+end = "0:1:00" # end is absolute too!
 position = "absolute"
 
 [[clip]]
 start = "0:00:10" # %T format
-end = "0:0:12" # end is relative too!
-position = "absolute"
+end = "0:1:00" # end is relative too!
+position = "relative"

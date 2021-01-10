@@ -17,10 +17,14 @@ pub trait Cache {
 	    })
     }
     fn write_cache(&self, track_name: &TrackName) where Self: Serialize {
-	let current_sox_config_str = format!(
+	let mut current_sox_config_str = format!(
 	    "{}",
 	    toml::to_string(&self).unwrap()
 		.replace("[[]]", &format!("[[{}]]", Self::self_type()))); // for vector types
+
+	if current_sox_config_str.as_str() == "[]" {
+	    current_sox_config_str = "".to_owned();
+	}
 	
 	let mut file = File::create(
 	    track_name.dest_dir().join(format!("{}.toml", Self::self_type()))
