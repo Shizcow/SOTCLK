@@ -27,11 +27,13 @@ fn main() {
 	    println!("-> Building track {}", track_name);
 	    
 	    println!("--> Loading config file");
-	    let config = TrackData::load_from_track(&track_name);
+	    let mut config = TrackData::load_from_track(&track_name);
 
-	    if let Some(build_cfg) = &config.build() {
+	    if let (Some(build_cfg), cache, updates) = (config.build().clone(),
+							config.output().cache.unwrap_or(true),
+							&mut config.updates) {
 		println!("--> Checking build cache");
-		if config.needs_build_update {
+		if updates.needs_build_update {
 		    build_cfg.write_cache(&track_name);
 		    build_cfg.create_dir(&track_name);
 		    if build_cfg.git_sources.len() > 0 {
@@ -40,7 +42,9 @@ fn main() {
 		    }
 		    if build_cfg.http_sources.len() > 0 {
 			println!("--> Downloading http sources");
-			build_cfg.http(&track_name);
+			if build_cfg.http(&track_name, cache) {
+			    updates.build_updated();
+			}
 		    }
 		    if build_cfg.build_command.len() > 0 {
 			println!("--> Running build command");
@@ -53,7 +57,7 @@ fn main() {
 	    }
 
 	    println!("--> Checking raw cache");
-	    if config.needs_raw_update {
+	    if config.updates.needs_raw_update {
 		config.output().write_cache(&track_name);
 		println!("--> Running output command and dumping data");
 		println!("---> {}", &config.output().output_command);
@@ -63,7 +67,7 @@ fn main() {
 	    }
 	    
 	    println!("--> Checking sox cache");
-	    if config.needs_preprocessed_update {
+	    if config.updates.needs_preprocessed_update {
 		config.sox().write_cache(&track_name);
 		
 		println!("--> Piping through sox");

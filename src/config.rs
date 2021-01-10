@@ -1,7 +1,11 @@
 use serde::{Deserialize, de::DeserializeOwned, Serialize};
 use std::process::{Command, Stdio};
-use std::fs::{self, File};
+use std::fs::{self, File, metadata};
+use std::path::Path;
 use std::io::Write;
+use std::time::SystemTime;
+use curl::easy::Easy;
+use chrono::naive::NaiveDateTime;
 
 use crate::TrackName;
 
@@ -32,9 +36,21 @@ pub trait Cache {
 #[derive(Clone, Debug)]
 pub struct TrackData {
     pub track_config: TrackConfig,
+    pub updates: Updates,
+}
+
+#[derive(Clone, Debug)]
+pub struct Updates {
     pub needs_raw_update: bool,
     pub needs_preprocessed_update: bool,
     pub needs_build_update: bool,
+}
+
+impl Updates {
+    pub fn build_updated(&mut self) {
+	self.needs_raw_update = true;
+	self.needs_preprocessed_update = true;
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
@@ -71,9 +87,11 @@ impl TrackData {
 	
 	Self {
 	    track_config,
-	    needs_raw_update,
-	    needs_preprocessed_update,
-	    needs_build_update,
+	    updates: Updates {
+		needs_raw_update,
+		needs_preprocessed_update,
+		needs_build_update,
+	    }
 	}
     }
     pub fn dump_raw(&self, track_name: &TrackName) {
@@ -174,6 +192,7 @@ impl From<TrackConfig> for Build {
 impl Build {
     pub fn create_dir(&self, track_name: &TrackName) {
 	fs::create_dir_all(track_name.dest_dir().join("build").into_os_string()).unwrap();
+	fs::create_dir_all(track_name.dest_dir().join("http").into_os_string()).unwrap();
     }
     pub fn run(&self, track_name: &TrackName) {
 	assert!(Command::new("sh")
@@ -199,16 +218,77 @@ impl Build {
 		    "Git clone failed");
 	}
     }
-    pub fn http(&self, track_name: &TrackName) {
+    fn get_lastmod_upstream(&self, source: &String) -> Option<NaiveDateTime> {
+	let mut easy = Easy::new();
+	easy.url(source).unwrap();
+	let mut last_modified_upstream = None;
+	{
+	    let mut transfer = easy.transfer();
+	    transfer.header_function(|data| {
+		let head = String::from_utf8_lossy(data);
+		if head.starts_with("Last-Modified") {
+		    if let Ok(date) = NaiveDateTime::parse_from_str(
+			&head.trim().chars().skip("Last-Modified: ".len()).collect::<String>(),
+			"%a, %d %b %Y %T GMT") {
+			last_modified_upstream = Some(date);
+		    }
+		}
+		head.trim().len() > 0
+	    }).unwrap();
+	    /*easy.write_function(|data| {
+	    panic!("data: {:?}", data);
+	}).unwrap();*/
+	    transfer.perform().ok(); // throw away the error, we expect one from quitting early
+	}
+	last_modified_upstream
+    }
+    fn get_lastmod_downstream(&self, track_name: &TrackName, source: &String) -> Option<NaiveDateTime> {
+	metadata(track_name.dest_dir().join("http")
+		 .join(Path::new(source)
+		       .file_name().unwrap())).ok()
+	    .and_then(|m| m.modified().ok()
+		      .map(|d| NaiveDateTime::from_timestamp
+			   (d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64, 0)))
+    }
+    pub fn http(&self, track_name: &TrackName, cache: bool) -> bool { // returns OutOfDate
+	let mut out_of_date = false;
 	for source in &self.http_sources {
-	    assert!(Command::new("wget")
-		    .arg(source)
-		    .current_dir(track_name.dest_dir().join("build"))
+	    let last_modified_downstream = if !cache { None } else {
+		self.get_lastmod_downstream(track_name, source)
+	    };
+	    let last_modified_upstream = match last_modified_downstream {
+		None => None,
+		_ => self.get_lastmod_upstream(source),
+	    };
+
+	    match (last_modified_downstream, last_modified_upstream) {
+		(Some(down), Some(up)) if up < down => continue,
+		_ => (),
+	    }
+
+	    out_of_date = true;
+
+	    println!("---> {}", source);
+	    
+	    assert!(Command::new("curl") // Yeah, I'm using curl(1) and libcurl.
+		    .arg(source)         // If you hate it so much fix it yourself and PR.
+		    .arg("-O")
+		    .current_dir(track_name.dest_dir().join("http"))
 		    .stdout(Stdio::inherit())
 		    .stderr(Stdio::inherit())
 		    .output()
-		    .expect("Git clone failed").status.success(),
-		    "Git clone failed");
+		    .expect("Curl http request failed. Aborting.").status.success(),
+		    "Curl http request failed. Aborting.");
+	    let dl_name = Path::new(source).file_name().unwrap();
+	    assert!(Command::new("cp")
+		    .arg(track_name.dest_dir().join("http").join(&dl_name))
+		    .arg(track_name.dest_dir().join("build").join(&dl_name))
+		    .stdout(Stdio::inherit())
+		    .stderr(Stdio::inherit())
+		    .output()
+		    .expect("cp failed. Aborting.").status.success(),
+		    "cp failed. Aborting.");
 	}
+	out_of_date
     }
 }
