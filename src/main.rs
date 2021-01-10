@@ -32,20 +32,22 @@ fn main() {
 	    if let (Some(build_cfg), cache, updates) = (config.build().clone(),
 							config.output().cache.unwrap_or(true),
 							&mut config.updates) {
+		// Check download/clone status
+		build_cfg.create_dirs(&track_name);
+		if build_cfg.git_sources.len() > 0 {
+		    println!("--> Downloading git sources");
+		    build_cfg.git(&track_name);
+		}
+		if build_cfg.http_sources.len() > 0 {
+		    println!("--> Downloading http sources");
+		    if build_cfg.http(&track_name, cache) {
+			updates.build_updated();
+		    }
+		}
+		println!("--> Checking download cache");
 		println!("--> Checking build cache");
 		if updates.needs_build_update {
 		    build_cfg.write_cache(&track_name);
-		    build_cfg.create_dir(&track_name);
-		    if build_cfg.git_sources.len() > 0 {
-			println!("--> Downloading git sources");
-			build_cfg.git(&track_name);
-		    }
-		    if build_cfg.http_sources.len() > 0 {
-			println!("--> Downloading http sources");
-			if build_cfg.http(&track_name, cache) {
-			    updates.build_updated();
-			}
-		    }
 		    if build_cfg.build_command.len() > 0 {
 			println!("--> Running build command");
 			println!("---> {}", build_cfg.build_command);

@@ -48,6 +48,7 @@ pub struct Updates {
 
 impl Updates {
     pub fn build_updated(&mut self) {
+	self.needs_build_update = true;
 	self.needs_raw_update = true;
 	self.needs_preprocessed_update = true;
     }
@@ -190,7 +191,7 @@ impl From<TrackConfig> for Build {
 }
 
 impl Build {
-    pub fn create_dir(&self, track_name: &TrackName) {
+    pub fn create_dirs(&self, track_name: &TrackName) {
 	fs::create_dir_all(track_name.dest_dir().join("build").into_os_string()).unwrap();
 	fs::create_dir_all(track_name.dest_dir().join("http").into_os_string()).unwrap();
     }
