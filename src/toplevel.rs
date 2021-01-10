@@ -7,10 +7,16 @@ use crate::track_name::TrackName;
 use crate::cache::Cache;
 use crate::clip::ClipProcess;
 
-pub fn get_tracks() -> Vec<TrackName> {
+fn get_tracks() -> Vec<TrackName> {
     fs::read_dir("tracks").unwrap()
 	.map(|res| TrackName::new(res.map(|e| e.path()).unwrap().file_name().unwrap()))
 	.collect()
+}
+
+pub fn process_tracks() {
+    for track_name in get_tracks() {
+	    build_track(track_name);
+	}
 }
 
 pub fn setup_directories() {
