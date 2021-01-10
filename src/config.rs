@@ -36,7 +36,7 @@ pub struct TrackData {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct TrackConfig {
-    pub track: Track,
+    pub output: Output,
     pub sox: Sox,
 }
 
@@ -46,8 +46,8 @@ impl TrackData {
 	    &fs::read_to_string(track_name.config_file()).unwrap()
 	).unwrap();
 	
-	let needs_raw_update = Track::load_from_cache(&track_name)
-	    != Some(track_config.track.clone());
+	let needs_raw_update = Output::load_from_cache(&track_name)
+	    != Some(track_config.output.clone());
 	
 	let needs_preprocessed_update = match needs_raw_update {
 	    true => true,
@@ -64,17 +64,17 @@ impl TrackData {
     pub fn dump_raw(&self, track_name: &TrackName) {
 	let output = Command::new("sh")
 	    .arg("-c")
-	    .arg(&(self.track_config.track.output_command.clone()
+	    .arg(&(self.track_config.output.output_command.clone()
 		   + " | head --bytes="
-		   + &self.track_config.track.output_buffer))
+		   + &self.track_config.output.output_buffer))
 	    .output()
 	    .expect("Output command failed").stdout;
 	
 	let mut file = File::create(track_name.raw_file()).unwrap();
 	file.write_all(&output).unwrap();
     }
-    pub fn track(&self) -> &Track {
-	&self.track_config.track
+    pub fn track(&self) -> &Output {
+	&self.track_config.output
     }
     pub fn sox(&self) -> &Sox {
 	&self.track_config.sox
@@ -103,21 +103,21 @@ impl From<TrackConfig> for Sox {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-pub struct Track {
+pub struct Output {
     pub name: String,
     pub build_command: Option<String>,
     pub output_command: String,
     pub output_buffer: String,
 }
 
-impl Cache for Track {
+impl Cache for Output {
     fn self_type() -> &'static str {
-	"track"
+	"output"
     }
 }
 
-impl From<TrackConfig> for Track {
+impl From<TrackConfig> for Output {
     fn from(c: TrackConfig) -> Self {
-	c.track
+	c.output
     }
 }
