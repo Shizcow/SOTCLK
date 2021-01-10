@@ -77,8 +77,11 @@ fn main() {
 		println!("--> Sox output up to date; continuing");
 	    }
 
-	    println!("--> Editing with ffmpeg");
-	    config.clips().process(&track_name);
+	    if config.updates.needs_ffmpeg_update {
+		config.clips().write_cache(&track_name);
+		println!("--> Editing with ffmpeg");
+		config.clips().process(&track_name);
+	    }
 	    
 	    println!("--> Finished processing track '{}'", config.output().name);
 	}

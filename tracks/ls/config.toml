@@ -16,6 +16,6 @@ end = "0:0:05" # end is absolute too!
 position = "absolute"
 
 [[clip]]
-start = "0:00:09" # %T format
+start = "0:00:10" # %T format
 end = "0:0:12" # end is relative too!
 position = "absolute"

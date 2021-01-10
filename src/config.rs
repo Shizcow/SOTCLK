@@ -9,6 +9,12 @@ use chrono::naive::{NaiveDateTime, NaiveTime};
 
 use crate::TrackName;
 
+type Clips = Vec<Clip>;
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+struct ClipsOpt { // serde crap
+    clip: Option<Clips>,
+}
+
 pub trait Cache {
     fn load_from_cache(track_name: &TrackName) -> Option<Self>
     where Self: Sized + From<TrackConfig> + DeserializeOwned + std::fmt::Debug {
@@ -22,7 +28,8 @@ pub trait Cache {
     fn write_cache(&self, track_name: &TrackName) where Self: Serialize {
 	let current_sox_config_str = format!(
 	    "{}",
-	    toml::to_string(&self).unwrap());
+	    toml::to_string(&self).unwrap()
+		.replace("[[]]", &format!("[[{}]]", Self::self_type()))); // for vector types
 	
 	let mut file = File::create(
 	    track_name.dest_dir().join(format!("{}.toml", Self::self_type()))
@@ -44,6 +51,7 @@ pub struct Updates {
     pub needs_raw_update: bool,
     pub needs_preprocessed_update: bool,
     pub needs_build_update: bool,
+    pub needs_ffmpeg_update: bool,
 }
 
 impl Updates {
@@ -63,7 +71,7 @@ pub struct TrackConfig {
     pub output: Output,
     pub sox: Sox,
     pub build: Option<Build>,
-    clip: Option<Vec<Clip>>,
+    clip: Option<Clips>,
 }
 
 impl TrackData {
@@ -91,15 +99,22 @@ impl TrackData {
 	let needs_raw_update = match needs_build_update {
 	    true => true,
 	    false => (Output::load_from_cache(&track_name)
-		!= Some(track_config.output.clone()))
+		!= Some(track_config.clone().into()))
 		|| !track_name.dest_dir().join(TrackData::raw_filename()).exists(),
 	};
 	    
 	let needs_preprocessed_update = match needs_raw_update {
 	    true => true,
 	    false => (Sox::load_from_cache(&track_name)
-		      != Some(track_config.sox.clone()))
+		      != Some(track_config.clone().into()))
 		|| !track_name.dest_dir().join(TrackData::unprocessed_filename()).exists(),
+	};
+
+	let needs_ffmpeg_update = match needs_preprocessed_update {
+	    true => true,
+	    false => (ClipsOpt::load_from_cache(&track_name)
+		      != Some(track_config.clone().into()))
+		|| !track_name.dest_dir().join(TrackData::processed_filename()).exists(),
 	};
 	
 	Self {
@@ -108,6 +123,7 @@ impl TrackData {
 		needs_raw_update,
 		needs_preprocessed_update,
 		needs_build_update,
+		needs_ffmpeg_update,
 	    }
 	}
     }
@@ -145,7 +161,7 @@ impl TrackData {
     pub fn build(&self) -> &Option<Build> {
 	&self.track_config.build
     }
-    pub fn clips(&mut self) -> Vec<Clip> {
+    pub fn clips(&mut self) -> Clips {
 	self.track_config.clip.clone().unwrap_or(vec![])
     }
 }
@@ -154,8 +170,9 @@ pub trait ClipProcess {
     fn process(self, track_name: &TrackName);
 }
 
-impl ClipProcess for Vec<Clip> {
+impl ClipProcess for Clips {
     fn process(mut self, track_name: &TrackName) {
+	std::fs::remove_file(track_name.dest_dir().join(TrackData::processed_filename())).ok();
 	if self.len() == 0 {
 	    assert!(Command::new("cp")
 		    .arg(track_name.dest_dir().join(TrackData::unprocessed_filename()))
@@ -212,6 +229,30 @@ impl ClipProcess for Vec<Clip> {
 		    .expect("ffmpeg failed. Aborting.").status.success(),
 		    "ffmpeg failed. Aborting.");
 	}
+    }
+}
+
+impl From<TrackConfig> for Clips {
+    fn from(c: TrackConfig) -> Self {
+	c.clip.unwrap_or(vec![])
+    }
+}
+
+impl From<TrackConfig> for ClipsOpt {
+    fn from(c: TrackConfig) -> Self {
+	Self{clip: c.clip}
+    }
+}
+
+impl Cache for Clips {
+    fn self_type() -> &'static str {
+	"clip"
+    }
+}
+
+impl Cache for ClipsOpt {
+    fn self_type() -> &'static str {
+	"clip"
     }
 }
 
@@ -325,9 +366,6 @@ impl Build {
 		}
 		head.trim().len() > 0
 	    }).unwrap();
-	    /*easy.write_function(|data| {
-	    panic!("data: {:?}", data);
-	}).unwrap();*/
 	    transfer.perform().ok(); // throw away the error, we expect one from quitting early
 	}
 	last_modified_upstream
