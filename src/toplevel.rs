@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::fs;
 
 use crate::sox_args::SoxArgs;
@@ -6,6 +7,22 @@ use crate::config::TrackData;
 use crate::track_name::TrackName;
 use crate::cache::Cache;
 use crate::clip::ClipProcess;
+
+pub fn play_arg(matches: &clap::ArgMatches) {
+    println!("Playing via mpv...");
+    let track_name = TrackName::new_from_arg(matches);
+    assert!(Command::new("mpv")
+	    .arg(track_name.dest_dir().join(TrackData::processed_filename()))
+	    .stdout(Stdio::inherit())
+	    .stderr(Stdio::inherit())
+	    .output()
+	    .expect("mpv command failed").status.success(),
+	    "mpv command failed");
+}
+
+pub fn build_arg(matches: &clap::ArgMatches) {
+    build_track(TrackName::new_from_arg(matches));
+}
 
 pub fn get_tracks() -> Vec<TrackName> {
     fs::read_dir("tracks").unwrap()
@@ -15,8 +32,8 @@ pub fn get_tracks() -> Vec<TrackName> {
 
 pub fn process_tracks() {
     for track_name in get_tracks() {
-	    build_track(track_name);
-	}
+	build_track(track_name);
+    }
 }
 
 pub fn setup_directories() {

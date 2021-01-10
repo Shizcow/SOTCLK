@@ -6,6 +6,12 @@ pub struct TrackName {
 }
 
 impl TrackName {
+    pub fn new_from_arg(matches: &clap::ArgMatches) -> Self {
+	crate::toplevel::get_tracks().into_iter().find(|tn| {
+	    tn.get_name() == matches.value_of("track").unwrap()
+	}).expect(&format!("Track '{}' not found in tracks/ directory",
+			   matches.value_of("track").unwrap()))
+    }
     pub fn new(name: &OsStr) -> Self {
 	Self {
 	    name: name.to_os_string(),
