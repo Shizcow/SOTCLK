@@ -1,5 +1,5 @@
 use serde::{Deserialize, de::DeserializeOwned, Serialize};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::fs::{self, File};
 use std::io::Write;
 
@@ -163,6 +163,17 @@ impl From<TrackConfig> for Build {
 
 impl Build {
     pub fn create_dir(&self, track_name: &TrackName) {
-	
+	fs::create_dir_all(track_name.dest_dir().join("build").into_os_string()).unwrap();
+    }
+    pub fn run(&self, track_name: &TrackName) {
+	assert!(Command::new("sh")
+		.arg("-c")
+		.arg(&self.build_command)
+		.current_dir(track_name.dest_dir().join("build"))
+		.stdout(Stdio::inherit())
+		.stderr(Stdio::inherit())
+		.output()
+		.expect("Build command failed").status.success(),
+		"Build command failed");
     }
 }

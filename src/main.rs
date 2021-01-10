@@ -36,7 +36,7 @@ fn main() {
 		    build_cfg.create_dir(&track_name);
 		    println!("--> Running build command");
 		    println!("---> {}", build_cfg.build_command);
-		    
+		    build_cfg.run(&track_name);
 		} else {
 		    println!("--> Build files up to date; continuing");
 		}

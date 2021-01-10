@@ -13,7 +13,7 @@ encoding = "unsigned"
 
 # optional
 [build]
-build_command = "re"
+build_command = "pwd"
 http_sources = [
         "https://download.blender.org/demo/test/classroom.zip",
 ]
