@@ -1,7 +1,7 @@
 use serde::{Deserialize, de::DeserializeOwned, Serialize};
 use std::process::{Command, Stdio};
 use std::fs::{self, File, metadata};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io::Write;
 use std::time::SystemTime;
 use curl::easy::Easy;
@@ -49,6 +49,10 @@ pub struct Updates {
 impl Updates {
     pub fn build_updated(&mut self) {
 	self.needs_build_update = true;
+	self.needs_raw_update = true;
+	self.needs_preprocessed_update = true;
+    }
+    pub fn rebuilt(&mut self) {
 	self.needs_raw_update = true;
 	self.needs_preprocessed_update = true;
     }
@@ -191,11 +195,22 @@ impl From<TrackConfig> for Build {
 }
 
 impl Build {
+    fn build_lock_file(track_name: &TrackName) -> PathBuf {
+	track_name.dest_dir().join("build_complete.unlock")
+    }
+    pub fn wipe_build_progress(&self, track_name: &TrackName) {
+	std::fs::remove_file(Self::build_lock_file(track_name)).unwrap();
+    }
     pub fn create_dirs(&self, track_name: &TrackName) {
 	fs::create_dir_all(track_name.dest_dir().join("build").into_os_string()).unwrap();
 	fs::create_dir_all(track_name.dest_dir().join("http").into_os_string()).unwrap();
     }
-    pub fn run(&self, track_name: &TrackName) {
+    pub fn run(&self, track_name: &TrackName) -> bool { // is out of date
+	if Self::build_lock_file(track_name).exists() {
+	    println!("--> Build up to date");
+	    return false;
+	}
+	println!("---> {}", self.build_command);
 	assert!(Command::new("sh")
 		.arg("-c")
 		.arg(&self.build_command)
@@ -205,6 +220,8 @@ impl Build {
 		.output()
 		.expect("Build command failed").status.success(),
 		"Build command failed");
+	File::create(Self::build_lock_file(track_name)).unwrap();
+	true
     }
     fn get_lastmod_upstream(&self, source: &String) -> Option<NaiveDateTime> {
 	let mut easy = Easy::new();

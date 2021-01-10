@@ -46,17 +46,15 @@ fn main() {
 			updates.build_updated();
 		    }
 		}
-		println!("--> Checking download cache");
-		println!("--> Checking build cache");
 		if updates.needs_build_update {
 		    build_cfg.write_cache(&track_name);
-		    if build_cfg.build_command.len() > 0 {
-			println!("--> Running build command");
-			println!("---> {}", build_cfg.build_command);
-			build_cfg.run(&track_name);
+		    build_cfg.wipe_build_progress(&track_name);
+		}
+		if build_cfg.build_command.len() > 0 {
+		    println!("--> Building");
+		    if build_cfg.run(&track_name) {
+			updates.rebuilt();
 		    }
-		} else {
-		    println!("--> Build files up to date; continuing");
 		}
 	    }
 
