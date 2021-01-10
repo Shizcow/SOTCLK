@@ -66,6 +66,12 @@ pub struct TrackConfig {
 }
 
 impl TrackData {
+    pub fn raw_filename() -> &'static str {
+	"intermediate.raw"
+    }
+    pub fn unprocessed_filename() -> &'static str {
+	"unprocessed.flac"
+    }
     pub fn load_from_track(track_name: &TrackName) -> Self {
 	let track_config: TrackConfig = toml::from_str(
 	    &fs::read_to_string(track_name.source_dir().join("config.toml")).unwrap()
@@ -80,14 +86,16 @@ impl TrackData {
 	
 	let needs_raw_update = match needs_build_update {
 	    true => true,
-	    false => Output::load_from_cache(&track_name)
-		!= Some(track_config.output.clone()),
+	    false => (Output::load_from_cache(&track_name)
+		!= Some(track_config.output.clone()))
+		|| !track_name.dest_dir().join(TrackData::raw_filename()).exists(),
 	};
 	    
 	let needs_preprocessed_update = match needs_raw_update {
 	    true => true,
-	    false => Sox::load_from_cache(&track_name)
-		!= Some(track_config.sox.clone()),
+	    false => (Sox::load_from_cache(&track_name)
+		      != Some(track_config.sox.clone()))
+		|| !track_name.dest_dir().join(TrackData::unprocessed_filename()).exists(),
 	};
 	
 	Self {
@@ -100,6 +108,10 @@ impl TrackData {
 	}
     }
     pub fn dump_raw(&self, track_name: &TrackName) {
+	let intermed_file = track_name.dest_dir().join(TrackData::raw_filename());
+
+	std::fs::remove_file(&intermed_file).ok(); // makes cache happy
+	
 	let mut cmd = Command::new("sh");
 	cmd.arg("-c")
 	    .arg(&(self.track_config.output.output_command.clone()
@@ -117,7 +129,7 @@ impl TrackData {
 	let output = cmd.output()
 	    .expect("Output command failed");
 	
-	let mut file = File::create(track_name.dest_dir().join("intermediate.raw")).unwrap();
+	let mut file = File::create(&intermed_file).unwrap();
 	file.write_all(&output.stdout).unwrap();
     }
     pub fn output(&self) -> &Output {
@@ -200,7 +212,7 @@ impl Build {
 	track_name.dest_dir().join("build_complete.unlock")
     }
     pub fn wipe_build_progress(&self, track_name: &TrackName) {
-	std::fs::remove_file(Self::build_lock_file(track_name)).unwrap();
+	std::fs::remove_file(Self::build_lock_file(track_name)).ok();
     }
     pub fn create_dirs(&self, track_name: &TrackName) {
 	fs::create_dir_all(track_name.dest_dir().join("build").into_os_string()).unwrap();

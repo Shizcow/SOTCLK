@@ -61,7 +61,8 @@ fn main() {
 	    println!("--> Checking raw cache");
 	    if config.updates.needs_raw_update {
 		config.output().write_cache(&track_name);
-		println!("--> Running output command and dumping data");
+		println!("--> Running output command and dumping {} of data",
+			 config.output().output_buffer);
 		println!("---> {}", &config.output().output_command);
 		config.dump_raw(&track_name);
 	    } else {

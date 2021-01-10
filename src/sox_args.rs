@@ -34,9 +34,9 @@ impl SoxArgs {
 	    0
 	};
 	sox_args.append(&mut vec!["-t".into(), "raw".into(),
-				  track_name.dest_dir().join("intermediate.raw").into_os_string(),
+				  track_name.dest_dir().join(TrackData::raw_filename()).into_os_string(),
 				  "-t".into(), "flac".into(),
-				  track_name.dest_dir().join("unprocessed.flac").into_os_string()]);
+				  track_name.dest_dir().join(TrackData::unprocessed_filename()).into_os_string()]);
 
 	Self {
 	    args: sox_args,
@@ -44,6 +44,8 @@ impl SoxArgs {
 	}
     }
     pub fn execute(&self) {
+	std::fs::remove_file(self.args.last().unwrap()).ok(); // makes cache happy
+	
 	let mut sox_cmd = Command::new("sox");
 	sox_cmd.args(&self.args);
 
