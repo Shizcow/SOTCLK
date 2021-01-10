@@ -102,6 +102,7 @@ impl Build {
 
 	    match (last_modified_downstream, last_modified_upstream) {
 		(Some(down), Some(up)) if up < down => continue,
+		(Some(_), None) => continue,
 		_ => (),
 	    }
 
