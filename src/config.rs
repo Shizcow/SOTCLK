@@ -206,19 +206,6 @@ impl Build {
 		.expect("Build command failed").status.success(),
 		"Build command failed");
     }
-    pub fn git(&self, track_name: &TrackName) {
-	for source in &self.git_sources {
-	    assert!(Command::new("git")
-		    .arg("clone")
-		    .arg(source)
-		    .current_dir(track_name.dest_dir().join("build"))
-		    .stdout(Stdio::inherit())
-		    .stderr(Stdio::inherit())
-		    .output()
-		    .expect("Git clone failed").status.success(),
-		    "Git clone failed");
-	}
-    }
     fn get_lastmod_upstream(&self, source: &String) -> Option<NaiveDateTime> {
 	let mut easy = Easy::new();
 	easy.url(source).unwrap();
@@ -289,6 +276,30 @@ impl Build {
 		    .output()
 		    .expect("cp failed. Aborting.").status.success(),
 		    "cp failed. Aborting.");
+	}
+	out_of_date
+    }
+    pub fn git(&self, track_name: &TrackName) -> bool {
+	let mut out_of_date = false;
+	for source in &self.git_sources {
+	    let git_dir = track_name.dest_dir().join("build")
+		.join(Path::new(source)
+		      .file_stem().unwrap());
+	    
+	    if !git_dir.exists() {
+		assert!(Command::new("git")
+		    .arg("clone")
+		    .arg(source)
+		    .current_dir(track_name.dest_dir().join("build"))
+		    .stdout(Stdio::inherit())
+		    .stderr(Stdio::inherit())
+		    .output()
+		    .expect("Git clone failed").status.success(),
+			"Git clone failed");
+		out_of_date = true;
+	    } else {
+		panic!("Check for git update");
+	    }
 	}
 	out_of_date
     }

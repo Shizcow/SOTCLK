@@ -36,7 +36,9 @@ fn main() {
 		build_cfg.create_dirs(&track_name);
 		if build_cfg.git_sources.len() > 0 {
 		    println!("--> Downloading git sources");
-		    build_cfg.git(&track_name);
+		    if build_cfg.git(&track_name) {
+			updates.build_updated();
+		    }
 		}
 		if build_cfg.http_sources.len() > 0 {
 		    println!("--> Downloading http sources");
