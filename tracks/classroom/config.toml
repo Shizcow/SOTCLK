@@ -13,10 +13,10 @@ encoding = "unsigned"
 
 # optional
 [build]
-build_command = ""
-http-sources = [
+build_command = "re"
+http_sources = [
         "https://download.blender.org/demo/test/classroom.zip",
 ]
-git-sources = [
+git_sources = [
         "",
 ]

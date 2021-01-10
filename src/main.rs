@@ -29,12 +29,27 @@ fn main() {
 	    println!("--> Loading config file");
 	    let config = TrackData::load_from_track(&track_name);
 
-	    println!("--> Checking build cache");
+	    if let Some(build_cfg) = &config.build() {
+		println!("--> Checking build cache");
+		if config.needs_build_update {
+		    build_cfg.write_cache(&track_name);
+		    build_cfg.create_dir(&track_name);
+		    println!("--> Running build command");
+		    println!("---> {}", build_cfg.build_command);
+		    
+		} else {
+		    println!("--> Build files up to date; continuing");
+		}
+	    }
+
+	    println!("--> Checking raw cache");
 	    if config.needs_raw_update {
 		config.track().write_cache(&track_name);
 		println!("--> Running output command and dumping data");
 		println!("---> {}", &config.track().output_command);
 		config.dump_raw(&track_name);
+	    } else {
+		println!("--> Output generation up to date; continuing");
 	    }
 	    
 	    println!("--> Checking sox cache");
@@ -44,7 +59,7 @@ fn main() {
 		println!("--> Piping through sox");
 		SoxArgs::new(&track_name, &config).execute();
 	    } else {
-		println!("--> Build files up to date; continuing");
+		println!("--> Sox output up to date; continuing");
 	    }
 	    
 	    println!("--> Finished processing track '{}'", config.track().name);

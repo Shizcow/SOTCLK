@@ -34,9 +34,9 @@ impl SoxArgs {
 	    0
 	};
 	sox_args.append(&mut vec!["-t".into(), "raw".into(),
-				  track_name.raw_file().into_os_string(),
+				  track_name.dest_dir().join("intermediate.raw").into_os_string(),
 				  "-t".into(), "flac".into(),
-				  track_name.unprocessed_file().into_os_string()]);
+				  track_name.dest_dir().join("unprocessed.flac").into_os_string()]);
 
 	Self {
 	    args: sox_args,

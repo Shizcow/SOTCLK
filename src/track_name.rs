@@ -11,35 +11,22 @@ impl TrackName {
 	    name: name.to_os_string(),
 	}
     }
-    pub fn config_file(&self) -> PathBuf {
+    pub fn source_dir(&self) -> PathBuf {
 	let mut pb = PathBuf::new();
 	pb.push("tracks");
 	pb.push(&self.name);
-	pb.push("config.toml");
 	pb
     }
-    pub fn raw_file(&self) -> PathBuf {
+    pub fn dest_dir(&self) -> PathBuf {
 	let mut pb = PathBuf::new();
 	pb.push("target");
 	pb.push("tracks");
 	pb.push(&self.name);
-	pb.push("intermediate.raw");
 	pb
-    }
-    pub fn unprocessed_file(&self) -> PathBuf {
-	let mut pb = PathBuf::new();
-	pb.push("target");
-	pb.push("tracks");
-	pb.push(&self.name);
-	pb.push("unprocessed.flac");
-	pb
-    }
-    pub fn config_cache(&self, cfg_name: &str) -> PathBuf {
-	let mut pb = PathBuf::new();
-	pb.push("target");
-	pb.push("tracks");
-	pb.push(&self.name);
-	pb.push(cfg_name);
+   } 
+    pub fn build_dir(&self) -> PathBuf {
+	let mut pb = self.dest_dir();
+	pb.push("build");
 	pb
     }
 }
