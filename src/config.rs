@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::io::Write;
 use std::time::SystemTime;
 use curl::easy::Easy;
-use chrono::naive::NaiveDateTime;
+use chrono::naive::{NaiveDateTime, NaiveTime};
 
 use crate::TrackName;
 
@@ -63,6 +63,7 @@ pub struct TrackConfig {
     pub output: Output,
     pub sox: Sox,
     pub build: Option<Build>,
+    clip: Option<Vec<Clip>>,
 }
 
 impl TrackData {
@@ -71,6 +72,9 @@ impl TrackData {
     }
     pub fn unprocessed_filename() -> &'static str {
 	"unprocessed.flac"
+    }
+    pub fn processed_filename() -> &'static str {
+	"processed.flac"
     }
     pub fn load_from_track(track_name: &TrackName) -> Self {
 	let track_config: TrackConfig = toml::from_str(
@@ -140,6 +144,74 @@ impl TrackData {
     }
     pub fn build(&self) -> &Option<Build> {
 	&self.track_config.build
+    }
+    pub fn clips(&mut self) -> Vec<Clip> {
+	self.track_config.clip.clone().unwrap_or(vec![])
+    }
+}
+
+pub trait ClipProcess {
+    fn process(self, track_name: &TrackName);
+}
+
+impl ClipProcess for Vec<Clip> {
+    fn process(mut self, track_name: &TrackName) {
+	if self.len() == 0 {
+	    assert!(Command::new("cp")
+		    .arg(track_name.dest_dir().join(TrackData::unprocessed_filename()))
+		    .arg(track_name.dest_dir().join(TrackData::processed_filename()))
+		    .stdout(Stdio::inherit())
+		    .stderr(Stdio::inherit())
+		    .output()
+		    .expect("cp failed. Aborting.").status.success(),
+		    "cp failed. Aborting.");
+	} else {
+	    // check clips for "absolute"/"relative" correctness
+	    for clip in self.iter() {
+		match clip.position.as_str() {
+		    "absolute" | "relative" => (),
+		    other => panic!("clip position '{}' is invalid. \
+				     Valid options are: relative, absolute.",
+				    other),
+		}
+	    }
+	    
+	    // logically, the first clip is always absolute
+	    self[0].position = "absolute".to_owned();
+
+	    // now, fold through and make everything absolute
+	    for clip_n in 1..self.len() {
+		if &self[clip_n].position == "relative" {
+		    let offset = self[clip_n-1].end
+			.signed_duration_since(NaiveTime::from_hms(0, 0, 0));
+		    self[clip_n].start += offset;
+		    self[clip_n].end += offset;
+		    self[clip_n].position = "absolute".to_owned();
+		}
+	    }
+
+	    let filter_arg = 
+		format!("aselect='{}',asetpts=N/SR/TB", self.into_iter().map(|clip| {
+		    format!("between(t,{},{})",
+			    clip.start.signed_duration_since(NaiveTime::from_hms(0, 0, 0))
+			    .num_seconds(),
+			    clip.end.signed_duration_since(NaiveTime::from_hms(0, 0, 0))
+			    .num_seconds())
+		}).collect::<Vec<String>>().join("+"));
+
+	    
+	    assert!(Command::new("ffmpeg")
+		    .arg("-i")
+		    .arg(track_name.dest_dir().join(TrackData::unprocessed_filename()))
+		    .arg("-af")
+		    .arg(filter_arg)
+		    .arg(track_name.dest_dir().join(TrackData::processed_filename()))
+		    .stdout(Stdio::inherit())
+		    .stderr(Stdio::inherit())
+		    .output()
+		    .expect("ffmpeg failed. Aborting.").status.success(),
+		    "ffmpeg failed. Aborting.");
+	}
     }
 }
 
@@ -370,4 +442,14 @@ impl Build {
 	}
 	out_of_date
     }
+}
+
+
+
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub struct Clip {
+    start: NaiveTime,
+    end: NaiveTime,
+    position: String,
 }

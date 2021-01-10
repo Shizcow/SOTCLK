@@ -6,7 +6,7 @@ use sox_args::SoxArgs;
 mod track_name;
 use track_name::TrackName;
 mod config;
-use config::{TrackData, Cache};
+use config::{TrackData, Cache, ClipProcess};
 
 fn main() {
     // create track directories
@@ -58,7 +58,6 @@ fn main() {
 		}
 	    }
 
-	    println!("--> Checking raw cache");
 	    if config.updates.needs_raw_update {
 		config.output().write_cache(&track_name);
 		println!("--> Running output command and dumping {} of data",
@@ -69,7 +68,6 @@ fn main() {
 		println!("--> Output generation up to date; continuing");
 	    }
 	    
-	    println!("--> Checking sox cache");
 	    if config.updates.needs_preprocessed_update {
 		config.sox().write_cache(&track_name);
 		
@@ -78,6 +76,9 @@ fn main() {
 	    } else {
 		println!("--> Sox output up to date; continuing");
 	    }
+
+	    println!("--> Editing with ffmpeg");
+	    config.clips().process(&track_name);
 	    
 	    println!("--> Finished processing track '{}'", config.output().name);
 	}
