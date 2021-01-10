@@ -18,6 +18,4 @@ build_command = "unzip -u classroom.zip"
 http_sources = [
         "https://download.blender.org/demo/test/classroom.zip",
 ]
-git_sources = [
-            "https://github.com/Shizcow/SOTCLK.git", # just for testing
-]
+git_sources = []
