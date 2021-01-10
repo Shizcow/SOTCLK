@@ -76,12 +76,17 @@ pub fn build_track(track_name: TrackName) {
 		updates.build_updated();
 	    }
 	}
+	if build_cfg.copy_me {
+	    println!("--> Copying local files");
+	    if build_cfg.local(&track_name, cache) {
+		updates.build_updated();
+	    }
+	}
 	if updates.needs_build_update {
 	    build_cfg.write_cache(&track_name);
 	    build_cfg.wipe_build_progress(&track_name);
 	}
 	if build_cfg.build_command.len() > 0 {
-	    println!("--> Building");
 	    if build_cfg.run(&track_name) {
 		updates.rebuilt();
 	    }

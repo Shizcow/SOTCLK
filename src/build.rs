@@ -5,6 +5,7 @@ use chrono::naive::NaiveDateTime;
 use std::time::SystemTime;
 use std::fs::{self, File, metadata};
 use curl::easy::Easy;
+use walkdir::WalkDir;
 
 use crate::config::TrackConfig;
 use crate::track_name::TrackName;
@@ -41,12 +42,14 @@ impl Build {
     pub fn create_dirs(&self, track_name: &TrackName) {
 	fs::create_dir_all(track_name.dest_dir().join("build").into_os_string()).unwrap();
 	fs::create_dir_all(track_name.dest_dir().join("http").into_os_string()).unwrap();
+	fs::create_dir_all(track_name.dest_dir().join("local").into_os_string()).unwrap();
     }
     pub fn run(&self, track_name: &TrackName) -> bool { // is out of date
 	if !self.always_rebuild.unwrap_or(false) && Self::build_lock_file(track_name).exists() {
 	    println!("--> Build up to date");
 	    return false;
 	}
+	println!("--> Building");
 	println!("---> {}", self.build_command);
 	assert!(Command::new("sh")
 		.arg("-c")
@@ -102,7 +105,7 @@ impl Build {
 
 	    match (last_modified_downstream, last_modified_upstream) {
 		(Some(down), Some(up)) if up < down => continue,
-		(Some(_), None) => continue,
+		(Some(_), None) => continue, // if idk upstream, assume up to date
 		_ => (),
 	    }
 
@@ -188,6 +191,32 @@ impl Build {
 				.expect("Git pull failed").status.success(),
 				"Git pull failed");
 		    }
+	    }
+	}
+	out_of_date
+    }
+    pub fn local(&self, track_name: &TrackName, cache: bool) -> bool {
+	let mut out_of_date = false;
+	for entry in WalkDir::new(track_name.source_dir()).into_iter().skip(1) {
+	    let e = entry.unwrap();
+	    let oldpath = e.path();
+	    let oldpath_string = oldpath.display().to_string().chars()
+		.skip(format!("tracks/{}/", track_name.get_name()).len()) // Path::pop would be better but ehh
+		.collect::<String>();
+	    let newpath = track_name.dest_dir().join("local").join(&oldpath_string);
+
+	    let copy = false;
+
+	    if !copy {
+		continue;
+	    }
+	    out_of_date = true;
+	    if oldpath.is_dir() {
+		std::fs::create_dir(newpath)
+		    .expect("local mkdir failed");
+	    } else {
+		std::fs::copy(&oldpath, newpath)
+		    .expect("local copy failed");
 	    }
 	}
 	out_of_date

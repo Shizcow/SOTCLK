@@ -59,7 +59,7 @@ other_options = ""
 build_command = "echo 'I could cd into the downloaded repo below and run cargo build to make upstream tools available to output_command'"
 # `always_rebuild` is an optional field, false by default
 # If true, `build_command` will always be ran. This messes with caching
-always_rebuild = true
+always_rebuild = false
 # `http_sources` specifies files to be downloaded prior to running `build_command`
 # These files are simply downloaded with `curl`
 # Uses the `Last-Modified` request header to trigger a rebuild

@@ -78,7 +78,6 @@ using other players will come later.
 
 ## Stretch Goals
 Some additional work left to be done
-- Make copy_me work
 - A build subscript is able to compile tracks into full albums
   - Consider a `albums` folder, similar to the `tracks` folder
 - Albums and tracks can generate background video of command output as rendered in a terminal emulator
