@@ -46,9 +46,12 @@ impl TrackData {
 	    &fs::read_to_string(track_name.config_file()).unwrap()
 	).unwrap();
 	
-	let needs_raw_update = Output::load_from_cache(&track_name)
-	    != Some(track_config.output.clone());
-	
+	let needs_raw_update = match track_config.output.cache {
+	    Some(false) => true, // will propogate
+	    _ => Output::load_from_cache(&track_name)
+		!= Some(track_config.output.clone()),
+	};
+	    
 	let needs_preprocessed_update = match needs_raw_update {
 	    true => true,
 	    false => Sox::load_from_cache(&track_name)
@@ -106,6 +109,7 @@ impl From<TrackConfig> for Sox {
 pub struct Output {
     pub name: String,
     pub build_command: Option<String>,
+    pub cache: Option<bool>,
     pub output_command: String,
     pub output_buffer: String,
 }

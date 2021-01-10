@@ -9,13 +9,3 @@ sample_rate = 44000
 channels = 2
 encoding = "unsigned"
 #other_options = "" # optional
-
-# optional
-[build]
-build_command = "ree"
-http-sources = [
-        "",
-]
-git-sources = [
-        "",
-]

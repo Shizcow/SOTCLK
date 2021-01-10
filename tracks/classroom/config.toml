@@ -1,0 +1,22 @@
+[output]
+name = "classroom.blend"
+output_command = "cat classroom.blend"
+output_buffer = "5M" # how much initial data to capture
+cache = false # option, false by default
+
+[sox]
+bit_depth = 8
+sample_rate = 44000
+channels = 2
+encoding = "unsigned"
+#other_options = "" # optional
+
+# optional
+[build]
+build_command = ""
+http-sources = [
+        "https://download.blender.org/demo/test/classroom.zip",
+]
+git-sources = [
+        "",
+]
