@@ -1,7 +1,7 @@
 use std::process::Command;
 use std::ffi::OsString;
 
-use crate::{TrackName, TrackConfig};
+use crate::{TrackName, TrackData};
 
 pub struct SoxArgs {
     args: Vec<OsString>,
@@ -9,12 +9,12 @@ pub struct SoxArgs {
 }
 
 impl SoxArgs {
-    pub fn new(track_name: &TrackName, config: &TrackConfig) -> Self {
-	let mut sox_args: Vec<OsString> = vec!["-b".into(), config.sox.bit_depth.to_string().into(),
-					       "-r".into(), config.sox.sample_rate.to_string().into(),
-					       "-c".into(), config.sox.channels.to_string().into(),
-					       "-e".into(), config.sox.encoding.clone().into()];
-	let other_n = if let Some(other_args) = &config.sox.other_options {
+    pub fn new(track_name: &TrackName, config: &TrackData) -> Self {
+	let mut sox_args: Vec<OsString> = vec!["-b".into(), config.sox().bit_depth.to_string().into(),
+					       "-r".into(), config.sox().sample_rate.to_string().into(),
+					       "-c".into(), config.sox().channels.to_string().into(),
+					       "-e".into(), config.sox().encoding.clone().into()];
+	let other_n = if let Some(other_args) = &config.sox().other_options {
 	    let bytes = Command::new("sh")
 		.arg("-c")
 		.arg("for arg in $*; do echo $arg; done")

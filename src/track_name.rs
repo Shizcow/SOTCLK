@@ -34,12 +34,12 @@ impl TrackName {
 	pb.push("unprocessed.flac");
 	pb
     }
-    pub fn sox_config_cache(&self) -> PathBuf {
+    pub fn config_cache(&self, cfg_name: &str) -> PathBuf {
 	let mut pb = PathBuf::new();
 	pb.push("target");
 	pb.push("tracks");
 	pb.push(&self.name);
-	pb.push("sox.toml");
+	pb.push(cfg_name);
 	pb
     }
 }

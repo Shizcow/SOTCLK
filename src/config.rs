@@ -1,9 +1,38 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, de::DeserializeOwned, Serialize};
 use std::process::Command;
 use std::fs::{self, File};
 use std::io::Write;
 
 use crate::TrackName;
+
+pub trait Cache {
+    fn load_from_cache(track_name: &TrackName) -> Option<Self>
+    where Self: Sized + From<TrackConfig> + DeserializeOwned + std::fmt::Debug {
+	let filename = track_name.config_cache(&format!("{}.toml",
+							Self::self_type()));
+	fs::read_to_string(&filename).ok()
+	    .and_then(|cfg_str| {
+		toml::from_str::<Self>(&cfg_str).ok()
+	    })
+    }
+    fn write_cache(&self, track_name: &TrackName) where Self: Serialize {
+	let current_sox_config_str = format!(
+	    "{}",
+	    toml::to_string(&self).unwrap());
+	
+	let mut file = File::create(track_name.config_cache(&format!("{}.toml", Self::self_type()))).unwrap();
+	file.write_all(current_sox_config_str.as_bytes()).unwrap();
+    }
+    fn self_type() -> &'static str;
+}
+
+
+#[derive(Clone, Debug)]
+pub struct TrackData {
+    pub track_config: TrackConfig,
+    pub needs_raw_update: bool,
+    pub needs_preprocessed_update: bool,
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct TrackConfig {
@@ -11,58 +40,44 @@ pub struct TrackConfig {
     pub sox: Sox,
 }
 
-impl TrackConfig {
+impl TrackData {
     pub fn load_from_track(track_name: &TrackName) -> Self {
-	toml::from_str(
+	let track_config: TrackConfig = toml::from_str(
 	    &fs::read_to_string(track_name.config_file()).unwrap()
-	).unwrap()
+	).unwrap();
+	
+	let needs_raw_update = Track::load_from_cache(&track_name)
+	    != Some(track_config.track.clone());
+	
+	let needs_preprocessed_update = match needs_raw_update {
+	    true => true,
+	    false => Sox::load_from_cache(&track_name)
+		!= Some(track_config.sox.clone()),
+	};
+	
+	Self {
+	    track_config,
+	    needs_raw_update,
+	    needs_preprocessed_update,
+	}
     }
     pub fn dump_raw(&self, track_name: &TrackName) {
 	let output = Command::new("sh")
 	    .arg("-c")
-	    .arg(&(self.track.output_command.clone()
+	    .arg(&(self.track_config.track.output_command.clone()
 		   + " | head --bytes="
-		   + &self.track.output_buffer))
+		   + &self.track_config.track.output_buffer))
 	    .output()
 	    .expect("Output command failed").stdout;
 	
 	let mut file = File::create(track_name.raw_file()).unwrap();
 	file.write_all(&output).unwrap();
     }
-    pub fn write_cache(&self, track_name: &TrackName) {
-	let current_sox_config_str = format!(
-	    "[track]\n{}\n[sox]\n{}",
-	    toml::to_string(&self.track).unwrap(),
-	    toml::to_string(&self.sox).unwrap());
-	
-	let mut file = File::create(track_name.sox_config_cache()).unwrap();
-	file.write_all(current_sox_config_str.as_bytes()).unwrap();
+    pub fn track(&self) -> &Track {
+	&self.track_config.track
     }
-}
-
-#[derive(Clone, Serialize, PartialEq)]
-pub struct SoxConfig {
-    pub track: Track,
-    pub sox: Sox,
-}
-
-impl SoxConfig {
-    pub fn load_from_cache(track_name: &TrackName) -> Option<Self> {
-	if let Ok(cfg_str) = fs::read_to_string(track_name.sox_config_cache()) {
-	    toml::from_str::<TrackConfig>(&cfg_str)
-		.ok().map(|o| o.into()) // if invalid just regenerate anyway
-	} else {
-	    None
-	}
-    }
-}
-
-impl Into<SoxConfig> for TrackConfig {
-    fn into(self) -> SoxConfig {
-	SoxConfig {
-	    track: self.track,
-	    sox: self.sox,
-	}
+    pub fn sox(&self) -> &Sox {
+	&self.track_config.sox
     }
 }
 
@@ -75,10 +90,34 @@ pub struct Sox {
     pub other_options: Option<String>,
 }
 
+impl Cache for Sox {
+    fn self_type() -> &'static str {
+	"sox"
+    }
+}
+
+impl From<TrackConfig> for Sox {
+    fn from(c: TrackConfig) -> Self {
+	c.sox
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Track {
     pub name: String,
     pub build_command: Option<String>,
     pub output_command: String,
     pub output_buffer: String,
+}
+
+impl Cache for Track {
+    fn self_type() -> &'static str {
+	"track"
+    }
+}
+
+impl From<TrackConfig> for Track {
+    fn from(c: TrackConfig) -> Self {
+	c.track
+    }
 }

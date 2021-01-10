@@ -6,7 +6,7 @@ use sox_args::SoxArgs;
 mod track_name;
 use track_name::TrackName;
 mod config;
-use config::{TrackConfig, SoxConfig};
+use config::{TrackData, Cache};
 
 fn main() {
     // create track directories
@@ -27,15 +27,19 @@ fn main() {
 	    println!("-> Building track {}", track_name);
 	    
 	    println!("--> Loading config file");
-	    let config = TrackConfig::load_from_track(&track_name);
+	    let config = TrackData::load_from_track(&track_name);
 
 	    println!("--> Checking build cache");
-	    if SoxConfig::load_from_cache(&track_name) != Some(config.clone().into()) {
-		config.write_cache(&track_name);
+	    if config.needs_raw_update {
+		config.track().write_cache(&track_name);
 		println!("--> Running output command and dumping data");
-		println!("---> {}", &config.track.output_command);
-
+		println!("---> {}", &config.track().output_command);
 		config.dump_raw(&track_name);
+	    }
+	    
+	    println!("--> Checking sox cache");
+	    if config.needs_preprocessed_update {
+		config.sox().write_cache(&track_name);
 		
 		println!("--> Piping through sox");
 		SoxArgs::new(&track_name, &config).execute();
@@ -43,7 +47,7 @@ fn main() {
 		println!("--> Build files up to date; continuing");
 	    }
 	    
-	    println!("--> Finished processing track '{}'", config.track.name);
+	    println!("--> Finished processing track '{}'", config.track().name);
 	}
 
     println!("Done");
