@@ -16,6 +16,7 @@ pub struct Build {
     pub http_sources: Vec<String>,
     pub git_sources: Vec<String>,
     pub always_rebuild: Option<bool>,
+    pub copy_me: bool,
 }
 
 impl Cache for Build {

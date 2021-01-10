@@ -63,9 +63,6 @@ always_rebuild = true
 # `http_sources` specifies files to be downloaded prior to running `build_command`
 # These files are simply downloaded with `curl`
 # Uses the `Last-Modified` request header to trigger a rebuild
-# If this header isn't present, the file will only be downloaded if it does not exist
-#   use cache=false in [output] to always download the file
-#   or run `cargo run -- clean TRACK_NAME` to wipe cache and trigger a rebuild
 http_sources = [
     # For example, the README for this project
     "https://raw.githubusercontent.com/Shizcow/SOTCLK/master/README.md",
