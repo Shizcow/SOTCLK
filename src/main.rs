@@ -2,11 +2,17 @@ use std::fs;
 use std::path::PathBuf;
 
 mod sox_args;
-use sox_args::SoxArgs;
+use sox_args::*;
 mod track_name;
-use track_name::TrackName;
+use track_name::*;
 mod config;
-use config::{TrackData, Cache, ClipProcess};
+use config::*;
+mod build;
+use build::*;
+mod cache;
+use cache::*;
+mod clip;
+use clip::*;
 
 fn main() {
     // create track directories
