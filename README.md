@@ -49,12 +49,26 @@ Playing a track through the `play` subcommand also builds that track.
 ### Exporting Tracks
 Coming soon.
 
+## Creating/Configuring Tracks
+New tracks can be added for compilation through the following steps:  
+- Creating a new directory in the [`tracks/`](tracks) directory
+- Creating a `config.toml` file in the new directory
+
+After that, the tracks can be built via the commands in the
+[Building Tracks](#building-tracks) section.
+
+For a complete example `config.toml` with documentation, see
+[`sample_config.toml`](sample_config.toml).
+
 ## Dependencies
 The following dependencies are required for building:  
 - `rustc`, `cargo`, etc
 - `sh`
 - `sox`
 - `ffmpeg`
+- `cp`
+- `head`
+
 The following dependencies are required during building if a project specifies sources:  
 - `curl` and `libcurl` for http sources
 - `git` for git sources
