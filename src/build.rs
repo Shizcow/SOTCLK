@@ -219,7 +219,7 @@ impl Build {
 	    };
 
 	    match (last_modified_old, last_modified_new) {
-		(Some(down), Some(up)) if up < down => continue,
+		(Some(old), Some(new)) if old < new => continue,
 		_ => (),
 	    }
 
