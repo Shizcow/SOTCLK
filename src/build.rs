@@ -92,6 +92,12 @@ impl Build {
 		      .map(|d| NaiveDateTime::from_timestamp
 			   (d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64, 0)))
     }
+    fn get_lastmod_local(&self, source: &PathBuf) -> Option<NaiveDateTime> {
+	metadata(source).ok()
+	    .and_then(|m| m.modified().ok()
+		      .map(|d| NaiveDateTime::from_timestamp
+			   (d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64, 0)))
+    }
     pub fn http(&self, track_name: &TrackName, cache: bool) -> bool { // returns OutOfDate
 	let mut out_of_date = false;
 	for source in &self.http_sources {
@@ -204,12 +210,19 @@ impl Build {
 		.skip(format!("tracks/{}/", track_name.get_name()).len()) // Path::pop would be better but ehh
 		.collect::<String>();
 	    let newpath = track_name.dest_dir().join("local").join(&oldpath_string);
+	    
+	    let last_modified_old = if !cache { None } else {
+		self.get_lastmod_local(&oldpath.to_path_buf())
+	    };
+	    let last_modified_new = if !cache { None } else {
+		self.get_lastmod_local(&newpath)
+	    };
 
-	    let copy = false;
-
-	    if !copy {
-		continue;
+	    match (last_modified_old, last_modified_new) {
+		(Some(down), Some(up)) if up < down => continue,
+		_ => (),
 	    }
+	    
 	    out_of_date = true;
 	    if oldpath.is_dir() {
 		std::fs::create_dir(newpath)
