@@ -205,32 +205,32 @@ impl Build {
 	let mut out_of_date = false;
 	for entry in WalkDir::new(track_name.source_dir()).into_iter().skip(1) {
 	    let e = entry.unwrap();
-	    let oldpath = e.path();
-	    let oldpath_string = oldpath.display().to_string().chars()
+	    let srcpath = e.path();
+	    let srcpath_string = srcpath.display().to_string().chars()
 		.skip(format!("tracks/{}/", track_name.get_name()).len()) // Path::pop would be better but ehh
 		.collect::<String>();
-	    let newpath = track_name.dest_dir().join("local").join(&oldpath_string);
-	    
-	    let last_modified_old = if !cache { None } else {
-		self.get_lastmod_local(&oldpath.to_path_buf())
+	    let dstpath = track_name.dest_dir().join("local").join(&srcpath_string);
+
+	    let last_modified_src = if !cache { None } else {
+		self.get_lastmod_local(&srcpath.to_path_buf())
 	    };
-	    let last_modified_new = if !cache { None } else {
-		self.get_lastmod_local(&newpath)
+	    let last_modified_dst = if !cache { None } else {
+		self.get_lastmod_local(&dstpath)
 	    };
 
-	    match (last_modified_old, last_modified_new) {
-		(Some(old), Some(new)) if old < new => continue,
+	    match (last_modified_src, last_modified_dst) {
+		(Some(src), Some(dst)) if src < dst => continue,
 		_ => (),
 	    }
 
-	    println!("---> {}", oldpath_string);
+	    println!("---> {}", srcpath_string);
 	    
 	    out_of_date = true;
-	    if oldpath.is_dir() {
-		std::fs::create_dir(newpath)
+	    if srcpath.is_dir() {
+		std::fs::create_dir(dstpath)
 		    .expect("local mkdir failed");
 	    } else {
-		std::fs::copy(&oldpath, newpath)
+		std::fs::copy(&srcpath, dstpath)
 		    .expect("local copy failed");
 	    }
 	}

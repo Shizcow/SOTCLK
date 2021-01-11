@@ -56,7 +56,7 @@ other_options = ""
 # `build_command` specifies the command used to set up the build directory
 # It is ran as `sh -c "$build_command"`
 # This can be used for unziping files, compiling data, or building remote projects
-build_command = "echo 'I could cd into the downloaded repo below and run cargo build to make upstream tools available to output_command'"
+build_command = "sh test.sh"
 # `always_rebuild` is an optional field, false by default
 # If true, `build_command` will always be ran. This messes with caching
 always_rebuild = false
