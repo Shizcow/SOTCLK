@@ -8,7 +8,7 @@ This repo serves as an infinitely better way to create tracks.
 without any header information. This feature is often used to convert and play audio
 mid-stream. It also does a pretty good job of converting raw data into audio. While
 the results are far from what can be considered music, interesting sounds can pop up
-in the most unlikely places surpsisingly often.
+in the most unlikely places surprisingly often.
 
 Data used can be program output, file contents, or really anything that can be read from
 a file. So long as there's enough data, `sox` can get something meaningful.
@@ -71,6 +71,11 @@ After that, the tracks can be built via the commands in the
 
 For a complete example `config.toml` with documentation, see
 [`sample_config.toml`](sample_config.toml).
+
+## Error Checking
+There isn't any. Considering that takes time and this is a __really__ dumb project,
+there probably won't be. Unless, of course, an issue is filed -- I'm happy to help
+diagnose problems and introduce error checking if people actually end up using this.
 
 ## Dependencies
 The following dependencies are required for building:  
