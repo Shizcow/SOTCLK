@@ -222,6 +222,8 @@ impl Build {
 		(Some(down), Some(up)) if up < down => continue,
 		_ => (),
 	    }
+
+	    println!("---> {}", oldpath_string);
 	    
 	    out_of_date = true;
 	    if oldpath.is_dir() {
