@@ -20,3 +20,4 @@ http_sources = [
         "https://download.blender.org/demo/test/classroom.zip",
 ]
 git_sources = []
+copy_me = false
