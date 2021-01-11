@@ -1,2 +1,3 @@
-echo hello
+echo hello2
 
+exit 1

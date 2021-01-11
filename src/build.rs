@@ -234,6 +234,16 @@ impl Build {
 		    .expect("local copy failed");
 	    }
 	}
+	assert!(Command::new("sh")
+		.arg("-c")
+		.arg(format!("cp -r {}/* {}/",
+			     track_name.dest_dir().join("local").into_os_string().to_string_lossy(),
+			     track_name.dest_dir().join("build").into_os_string().to_string_lossy()))
+		.stdout(Stdio::inherit())
+		.stderr(Stdio::inherit())
+		.output()
+		.expect("Git reset failed").status.success(),
+		"Git reset failed");
 	out_of_date
     }
 }
