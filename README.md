@@ -34,7 +34,7 @@ Single tracks can also be built with the following command:
 cargo run -- build TRACK_NAME
 ```
 Where `TRACK_NAME` is the directory name of a track in the [`tracks/`](tracks) directory.
-For example, to build the `ls` album, run `cargo run -- build ls`.
+For example, to build the `ls` track, run `cargo run -- build ls`.
 
 ### Playing Tracks
 Playing a track is done through the following command:
@@ -42,12 +42,24 @@ Playing a track is done through the following command:
 cargo run -- play TRACK_NAME
 ```
 Where `TRACK_NAME` is the directory name of a track in the [`tracks/`](tracks) directory.
-For example, to play the `ls` album, run `cargo run -- play ls`.
+For example, to play the `ls` track, run `cargo run -- play ls`.
 
 Playing a track through the `play` subcommand also builds that track.
 
+If `mpv` is not available, you can export the track (see below) and play through your desired
+media player.
+
 ### Exporting Tracks
-Coming soon.
+Use the following command to export a track:
+```sh
+cargo run -- export TRACK_NAME FILENAME.flac
+```
+Where `TRACK_NAME` is the directory name of a track in the [`tracks/`](tracks) directory,
+and where `FILENAME.flac` is the desired __output__ filename, relative to the local
+directory.
+
+For example, to build and export the `ls` track to `ls.flac`,
+run `cargo run -- export ls ls.flac`.
 
 ## Creating/Configuring Tracks
 New tracks can be added for compilation through the following steps:  

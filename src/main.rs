@@ -28,6 +28,13 @@ fn main() {
         .subcommand(SubCommand::with_name("clean")
                     .about("Wipe the cache of a track, triggering a rebuild")
                     .arg(track_arg.clone()))
+        .subcommand(SubCommand::with_name("export")
+                    .about("Save a track's .flac somewhere")
+                    .arg(track_arg.clone())
+		    .arg(Arg::with_name("output_file")
+			 .index(2)
+			 .required(true)
+			 .help("Filename to save to. Ex: exported.flac")))
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("clean") {
@@ -42,6 +49,9 @@ fn main() {
 	} else if let Some(matches) = matches.subcommand_matches("play") {
 	    toplevel::build_arg(matches);
 	    toplevel::play_arg(matches);
+	} else if let Some(matches) = matches.subcommand_matches("export") {
+	    toplevel::build_arg(matches);
+	    toplevel::export_arg(matches);
 	}
     }
 

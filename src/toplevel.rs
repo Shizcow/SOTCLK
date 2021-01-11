@@ -14,6 +14,19 @@ pub fn clean_arg(matches: &clap::ArgMatches) {
     std::fs::remove_dir_all(track_name.dest_dir()).ok(); // empty cache
 }
 
+pub fn export_arg(matches: &clap::ArgMatches) {
+    println!("Exporting...");
+    let track_name = TrackName::new_from_arg(matches);
+    assert!(Command::new("cp")
+	    .arg(track_name.dest_dir().join(TrackData::processed_filename()))
+	    .arg(matches.value_of("output_file").unwrap())
+	    .stdout(Stdio::inherit())
+	    .stderr(Stdio::inherit())
+	    .output()
+	    .expect("export command failed").status.success(),
+	    "export command failed");
+}
+
 pub fn play_arg(matches: &clap::ArgMatches) {
     println!("Playing via mpv...");
     let track_name = TrackName::new_from_arg(matches);
