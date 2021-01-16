@@ -4,7 +4,7 @@ use std::fs;
 
 use crate::sox_args::SoxArgs;
 use crate::config::TrackData;
-use crate::track_name::TrackName;
+use crate::track_name::TrackName; 
 use crate::cache::Cache;
 use crate::clip::ClipProcess;
 
@@ -43,21 +43,26 @@ pub fn build_arg(matches: &clap::ArgMatches) {
     build_track(TrackName::new_from_arg(matches));
 }
 
-pub fn get_tracks() -> Vec<TrackName> {
-    fs::read_dir("tracks").unwrap()
-	.map(|res| TrackName::new(res.map(|e| e.path()).unwrap().file_name().unwrap()))
+pub fn get_tracks(matches: &clap::ArgMatches) -> Vec<TrackName> {
+    fs::read_dir(matches.value_of("track_dir")
+				 .map(|dirname| PathBuf::from(dirname))
+				 .unwrap_or(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tracks"))).unwrap()
+	.map(|res| TrackName::new(res.map(|e| e.path()).unwrap().file_name().unwrap(),
+				  matches))
 	.collect()
 }
 
-pub fn process_tracks() {
-    for track_name in get_tracks() {
+pub fn process_tracks(matches: &clap::ArgMatches) {
+    for track_name in get_tracks(matches) {
 	build_track(track_name);
     }
 }
 
-pub fn setup_directories() {
+pub fn setup_directories(matches: &clap::ArgMatches) {
     println!("Creating build directories...");
-    for dir in fs::read_dir("tracks").unwrap()
+    for dir in fs::read_dir(matches.value_of("track_dir")
+				 .map(|dirname| PathBuf::from(dirname))
+				 .unwrap_or(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tracks"))).unwrap()
 	.map(|res| res.map(|e| e.path()).unwrap()) {
 	    let mut new_dir: PathBuf = ["target", "tracks"]
 		.iter().collect();

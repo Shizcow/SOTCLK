@@ -3,26 +3,27 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct TrackName {
-    name: OsString
+    name: OsString,
+    root_dir: PathBuf,
 }
 
 impl TrackName {
     pub fn new_from_arg(matches: &clap::ArgMatches) -> Self {
-	crate::toplevel::get_tracks().into_iter().find(|tn| {
+	crate::toplevel::get_tracks(matches).into_iter().find(|tn| {
 	    tn.get_name() == matches.value_of("track").unwrap()
 	}).expect(&format!("Track '{}' not found in tracks/ directory",
 			   matches.value_of("track").unwrap()))
     }
-    pub fn new(name: &OsStr) -> Self {
+    pub fn new(name: &OsStr, matches: &clap::ArgMatches) -> Self {
 	Self {
 	    name: name.to_os_string(),
+	    root_dir: matches.value_of("track_dir")
+		.map(|dirname| PathBuf::from(dirname))
+		.unwrap_or(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tracks")),
 	}
     }
     pub fn source_dir(&self) -> PathBuf {
-	let mut pb = PathBuf::new();
-	pb.push("tracks");
-	pb.push(&self.name);
-	pb
+	self.root_dir.clone().join(&self.name)
     }
     pub fn dest_dir(&self) -> PathBuf {
 	let mut pb = PathBuf::new();

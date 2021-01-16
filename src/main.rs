@@ -17,6 +17,12 @@ fn main() {
 	.version("1.0")
 	.about("Interpreting interesting data as raw audio")
 	.setting(AppSettings::SubcommandRequired)
+	.arg(Arg::with_name("track_dir")
+	     .long("--track-dir")
+	     .global(true)
+	     .takes_value(true)
+	     .value_name("TRACK_DIR")
+	     .help("Where to look for incoming track files. Defaults to git source directory."))
         .subcommand(SubCommand::with_name("build")
                     .about("Build a track, internally saving the result as a .flac file")
                     .arg(track_arg.clone()))
@@ -40,12 +46,12 @@ fn main() {
     if let Some(matches) = matches.subcommand_matches("clean") {
 	toplevel::clean_arg(matches);
     } else {
-	toplevel::setup_directories();
+	toplevel::setup_directories(&matches);
 	if let Some(matches) = matches.subcommand_matches("build") {
 	    toplevel::build_arg(matches);
-	} else if let Some(_) = matches.subcommand_matches("build-all") {
+	} else if let Some(matches) = matches.subcommand_matches("build-all") {
 	    println!("Building tracks...");
-	    toplevel::process_tracks();
+	    toplevel::process_tracks(matches);
 	} else if let Some(matches) = matches.subcommand_matches("play") {
 	    toplevel::build_arg(matches);
 	    toplevel::play_arg(matches);
