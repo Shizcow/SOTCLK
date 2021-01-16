@@ -26,11 +26,10 @@ impl TrackName {
 	self.root_dir.clone().join(&self.name)
     }
     pub fn dest_dir(&self) -> PathBuf {
-	let mut pb = PathBuf::new();
-	pb.push("target");
-	pb.push("tracks");
-	pb.push(&self.name);
-	pb
+	PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+	    .join("target")
+	    .join("tracks")
+	    .join(&self.name)
     } 
     pub fn build_dir(&self) -> PathBuf {
 	let mut pb = self.dest_dir();
