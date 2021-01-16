@@ -1,13 +1,12 @@
 use serde::{Deserialize, Serialize};
-use std::process::{Command, Stdio};
 use std::fs::{self, File};
 use std::io::Write;
+use std::process::{Command, Stdio};
 
-use crate::clip::{Clips, ClipsOpt};
-use crate::track_name::TrackName;
 use crate::build::Build;
 use crate::cache::Cache;
-
+use crate::clip::{Clips, ClipsOpt};
+use crate::track_name::TrackName;
 
 #[derive(Clone, Debug)]
 pub struct TrackData {
@@ -25,13 +24,13 @@ pub struct Updates {
 
 impl Updates {
     pub fn build_updated(&mut self) {
-	self.needs_build_update = true;
-	self.needs_raw_update = true;
-	self.needs_preprocessed_update = true;
+        self.needs_build_update = true;
+        self.needs_raw_update = true;
+        self.needs_preprocessed_update = true;
     }
     pub fn rebuilt(&mut self) {
-	self.needs_raw_update = true;
-	self.needs_preprocessed_update = true;
+        self.needs_raw_update = true;
+        self.needs_preprocessed_update = true;
     }
 }
 
@@ -45,93 +44,104 @@ pub struct TrackConfig {
 
 impl TrackData {
     pub fn raw_filename() -> &'static str {
-	"intermediate.raw"
+        "intermediate.raw"
     }
     pub fn unprocessed_filename() -> &'static str {
-	"unprocessed.flac"
+        "unprocessed.flac"
     }
     pub fn processed_filename() -> &'static str {
-	"processed.flac"
+        "processed.flac"
     }
     pub fn load_from_track(track_name: &TrackName) -> Self {
-	let track_config: TrackConfig = toml::from_str(
-	    &fs::read_to_string(track_name.source_dir().join("config.toml")).unwrap()
-	).unwrap();
-	
-	let needs_build_update = match (track_config.output.cache, &track_config.build) {
-	    (Some(false), _) => true, // will propogate
-	    (_, Some(bref)) => Build::load_from_cache(&track_name)
-		!= Some(bref.clone()),
-	    _ => false,
-	};
-	
-	let needs_raw_update = match needs_build_update {
-	    true => true,
-	    false => (Output::load_from_cache(&track_name)
-		!= Some(track_config.clone().into()))
-		|| !track_name.dest_dir().join(TrackData::raw_filename()).exists(),
-	};
-	    
-	let needs_preprocessed_update = match needs_raw_update {
-	    true => true,
-	    false => (Sox::load_from_cache(&track_name)
-		      != Some(track_config.clone().into()))
-		|| !track_name.dest_dir().join(TrackData::unprocessed_filename()).exists(),
-	};
-	
-	let needs_ffmpeg_update = match needs_preprocessed_update {
-	    true => true,
-	    false => (ClipsOpt::load_from_cache(&track_name)
-		      != Some(track_config.clone().into()))
-		|| !track_name.dest_dir().join(TrackData::processed_filename()).exists(),
-	};
-	
-	Self {
-	    track_config,
-	    updates: Updates {
-		needs_raw_update,
-		needs_preprocessed_update,
-		needs_build_update,
-		needs_ffmpeg_update,
-	    }
-	}
+        let track_config: TrackConfig = toml::from_str(
+            &fs::read_to_string(track_name.source_dir().join("config.toml")).unwrap(),
+        )
+        .unwrap();
+
+        let needs_build_update = match (track_config.output.cache, &track_config.build) {
+            (Some(false), _) => true, // will propogate
+            (_, Some(bref)) => Build::load_from_cache(&track_name) != Some(bref.clone()),
+            _ => false,
+        };
+
+        let needs_raw_update = match needs_build_update {
+            true => true,
+            false => {
+                (Output::load_from_cache(&track_name) != Some(track_config.clone().into()))
+                    || !track_name
+                        .dest_dir()
+                        .join(TrackData::raw_filename())
+                        .exists()
+            }
+        };
+
+        let needs_preprocessed_update = match needs_raw_update {
+            true => true,
+            false => {
+                (Sox::load_from_cache(&track_name) != Some(track_config.clone().into()))
+                    || !track_name
+                        .dest_dir()
+                        .join(TrackData::unprocessed_filename())
+                        .exists()
+            }
+        };
+
+        let needs_ffmpeg_update = match needs_preprocessed_update {
+            true => true,
+            false => {
+                (ClipsOpt::load_from_cache(&track_name) != Some(track_config.clone().into()))
+                    || !track_name
+                        .dest_dir()
+                        .join(TrackData::processed_filename())
+                        .exists()
+            }
+        };
+
+        Self {
+            track_config,
+            updates: Updates {
+                needs_raw_update,
+                needs_preprocessed_update,
+                needs_build_update,
+                needs_ffmpeg_update,
+            },
+        }
     }
     pub fn dump_raw(&self, track_name: &TrackName) {
-	let intermed_file = track_name.dest_dir().join(TrackData::raw_filename());
+        let intermed_file = track_name.dest_dir().join(TrackData::raw_filename());
 
-	std::fs::remove_file(&intermed_file).ok(); // makes cache happy
-	
-	let mut cmd = Command::new("sh");
-	cmd.arg("-c")
-	    .arg(&(self.track_config.output.output_command.clone()
-		   + " | head --bytes="
-		   + &self.track_config.output.output_buffer));
+        std::fs::remove_file(&intermed_file).ok(); // makes cache happy
 
-	if self.output().debug == Some(true) {
-	    cmd.stdout(Stdio::inherit())
-		.stderr(Stdio::inherit());
-	}
-	if self.build().is_some() {
-	    cmd.current_dir(track_name.dest_dir().join("build"));
-	}
+        let mut cmd = Command::new("sh");
+        cmd.arg("-c").arg(
+            &(self.track_config.output.output_command.clone()
+                + " | head --bytes="
+                + &self.track_config.output.output_buffer),
+        );
 
-	let output = cmd.output()
-	    .expect("Output command failed");
-	
-	let mut file = File::create(&intermed_file).unwrap();
-	file.write_all(&output.stdout).unwrap();
+        if self.output().debug == Some(true) {
+            cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+        }
+        if self.build().is_some() {
+            cmd.current_dir(track_name.dest_dir().join("build"));
+        }
+
+        let output = cmd.output().expect("Output command failed");
+
+        let mut file = File::create(&intermed_file).unwrap();
+        file.write_all(&output.stdout).unwrap();
     }
     pub fn output(&self) -> &Output {
-	&self.track_config.output
+        &self.track_config.output
     }
     pub fn sox(&self) -> &Sox {
-	&self.track_config.sox
+        &self.track_config.sox
     }
     pub fn build(&self) -> &Option<Build> {
-	&self.track_config.build
+        &self.track_config.build
     }
     pub fn clips(&mut self) -> Clips {
-	self.track_config.clip.clone().unwrap_or(vec![])
+        self.track_config.clip.clone().unwrap_or(vec![])
     }
 }
 
@@ -146,13 +156,13 @@ pub struct Sox {
 
 impl Cache for Sox {
     fn self_type() -> &'static str {
-	"sox"
+        "sox"
     }
 }
 
 impl From<TrackConfig> for Sox {
     fn from(c: TrackConfig) -> Self {
-	c.sox
+        c.sox
     }
 }
 
@@ -168,12 +178,12 @@ pub struct Output {
 
 impl Cache for Output {
     fn self_type() -> &'static str {
-	"output"
+        "output"
     }
 }
 
 impl From<TrackConfig> for Output {
     fn from(c: TrackConfig) -> Self {
-	c.output
+        c.output
     }
 }
