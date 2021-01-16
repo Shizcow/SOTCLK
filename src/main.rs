@@ -1,9 +1,12 @@
+mod album_data;
+mod album_name;
 mod build;
 mod cache;
 mod clip;
 mod config;
 mod sox_args;
-mod toplevel;
+mod toplevel_album;
+mod toplevel_track;
 mod track_name;
 
 use clap::{App, AppSettings, Arg, SubCommand};
@@ -13,6 +16,10 @@ fn main() {
         .index(1)
         .required(true)
         .help("track directory name, found in tracks/");
+    let album_arg = Arg::with_name("album")
+        .index(1)
+        .required(true)
+        .help("album config file name, found in albums/. Ex: 'ls'");
     let matches = App::new("Sounds of the Compiling Linux Kernel")
         .version("1.0")
         .about("Interpreting interesting data as raw audio")
@@ -25,10 +32,28 @@ fn main() {
                 .value_name("TRACK_DIR")
                 .help("Where to look for incoming track files. Defaults to git source directory."),
         )
+        .arg(
+            Arg::with_name("album_dir")
+                .long("--album-dir")
+                .global(true)
+                .takes_value(true)
+                .value_name("ALBUM_DIR")
+                .help("Where to look for incoming album config files. Defaults to git source directory."),
+        )
         .subcommand(
             SubCommand::with_name("build")
-                .about("Build a track, internally saving the result as a .flac file")
-                .arg(track_arg.clone()),
+                .about("Build an item, internally saving the result as a .flac file or set of .flac files")
+		.setting(AppSettings::SubcommandRequired)
+                .subcommand(
+                    SubCommand::with_name("track")
+                        .about("Build a track")
+                        .arg(track_arg.clone()),
+                )
+                .subcommand(
+                    SubCommand::with_name("album")
+                        .about("Build a track")
+                        .arg(album_arg.clone()),
+                ),
         )
         .subcommand(
             SubCommand::with_name("build-all")
@@ -58,20 +83,24 @@ fn main() {
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("clean") {
-        toplevel::clean_arg(matches);
+        toplevel_track::clean_arg(matches);
     } else {
-        toplevel::setup_directories(&matches);
+        toplevel_track::setup_directories(&matches);
         if let Some(matches) = matches.subcommand_matches("build") {
-            toplevel::build_arg(matches);
+            if let Some(matches) = matches.subcommand_matches("track") {
+                toplevel_track::build_arg(matches);
+            } else if let Some(matches) = matches.subcommand_matches("album") {
+                toplevel_album::build_arg(matches);
+            }
         } else if let Some(matches) = matches.subcommand_matches("build-all") {
             println!("Building tracks...");
-            toplevel::process_tracks(matches);
+            toplevel_track::process_tracks(matches);
         } else if let Some(matches) = matches.subcommand_matches("play") {
-            toplevel::build_arg(matches);
-            toplevel::play_arg(matches);
+            toplevel_track::build_arg(matches);
+            toplevel_track::play_arg(matches);
         } else if let Some(matches) = matches.subcommand_matches("export") {
-            toplevel::build_arg(matches);
-            toplevel::export_arg(matches);
+            toplevel_track::build_arg(matches);
+            toplevel_track::export_arg(matches);
         }
     }
 
