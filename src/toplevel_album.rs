@@ -1,10 +1,8 @@
-use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
 
 use crate::album_data::AlbumData;
 use crate::album_name::AlbumName;
-use crate::track_name::TrackName;
 
 pub fn build_arg(matches: &clap::ArgMatches) {
     build_album(AlbumName::new_from_arg(matches), matches);
@@ -26,8 +24,5 @@ pub fn build_album(album_name: AlbumName, matches: &clap::ArgMatches) {
     println!("> Loading config file");
     let config = AlbumData::load_from_track(&album_name);
 
-    for track in config.tracks().iter() {
-        let track_str: OsString = track.into();
-        crate::toplevel_track::build_track(TrackName::new(&track_str, matches));
-    }
+    config.compile(&matches);
 }

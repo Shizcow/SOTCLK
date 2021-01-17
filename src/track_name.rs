@@ -1,7 +1,7 @@
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TrackName {
     name: OsString,
     root_dir: PathBuf,
@@ -45,7 +45,7 @@ impl TrackName {
 
 impl std::fmt::Display for TrackName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name.to_string_lossy())
+        write!(f, "{}", self.get_name())
     }
 }
 

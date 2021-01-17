@@ -41,9 +41,6 @@ impl AlbumName {
             .join("albums")
             .join(&self.name)
     }
-    pub fn build_dir(&self) -> PathBuf {
-        self.dest_dir().join("build")
-    }
     pub fn get_name(&self) -> String {
         self.name.to_string_lossy().to_string()
     }
@@ -51,7 +48,7 @@ impl AlbumName {
 
 impl std::fmt::Display for AlbumName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name.to_string_lossy())
+        write!(f, "{}", self.get_name())
     }
 }
 

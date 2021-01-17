@@ -1,5 +1,5 @@
 [output]
-name = "ls -R /"
+name = "ls -R"
 output_command = "ls -R /"
 output_buffer = "10M" # how much initial data to capture
 
