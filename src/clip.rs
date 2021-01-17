@@ -80,7 +80,14 @@ impl ClipProcess for Clips {
             }
 
             // logically, the first clip is always absolute
-            self[0].position = "absolute".to_owned();
+            // However, if it is relative, make sure the end is adjusted
+            if &self[0].position == "relative" {
+                let mut first = &mut self[0];
+                first.position = "absolute".to_owned();
+                first.end += first
+                    .start
+                    .signed_duration_since(NaiveTime::from_hms(0, 0, 0));
+            }
 
             // now, fold through and make everything absolute
             for clip_n in 1..self.len() {
@@ -128,7 +135,6 @@ impl ClipProcess for Clips {
                     .into_os_string()
                     .to_string_lossy()
             );
-
 
             assert!(
                 Command::new("ffmpeg")
