@@ -87,7 +87,7 @@ impl<'a> AlbumData<'a> {
             .dest_dir()
             .join(format!("{}.flac", self.album_config.album.title));
 
-        if !out_of_date || !dest_file.exists() {
+        if !out_of_date && dest_file.exists() {
             println!(">Album up to date; continuing");
         } else {
             let empty_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
