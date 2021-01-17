@@ -118,6 +118,8 @@ fn main() {
         } else if let Some(matches) = matches.subcommand_matches("build-all") {
             println!("Building tracks...");
             toplevel_track::process_tracks(matches);
+            println!("Building albums...");
+            toplevel_album::process_albums(matches);
         } else if let Some(matches) = matches.subcommand_matches("play") {
             toplevel_track::build_arg(matches);
             toplevel_track::play_arg(matches);

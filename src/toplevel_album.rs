@@ -4,6 +4,12 @@ use std::path::PathBuf;
 use crate::album_data::AlbumData;
 use crate::album_name::AlbumName;
 
+pub fn process_albums(matches: &clap::ArgMatches) {
+    for album_name in get_albums(matches) {
+        build_album(album_name, matches);
+    }
+}
+
 pub fn clean_arg(matches: &clap::ArgMatches) {
     let album_name = AlbumName::new_from_arg(matches);
     println!("Cleaning cache for album {}", album_name.get_name());
