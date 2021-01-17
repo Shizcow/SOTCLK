@@ -1,8 +1,11 @@
 use chrono::naive::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
-use std::fs::{self, metadata};
+use std::fs::{self, metadata, File};
+use std::io::Write;
 use std::ops::Deref;
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::time::SystemTime;
 
 use crate::album_name::AlbumName;
@@ -31,45 +34,132 @@ impl<'a> AlbumData<'a> {
     pub fn compile(&self, matches: &clap::ArgMatches) {
         self.create_dirs();
 
-        let track_datas = self.tracks().iter().map(|track| {
-            let track_str: OsString = track.into();
-            let track_name = TrackName::new(&track_str, matches);
-            let track_data = TrackData::load_from_track(&track_name);
-            crate::toplevel_track::build_track(track_name.clone());
+        let track_datas: Vec<TrackData> = self
+            .tracks()
+            .iter()
+            .map(|track| {
+                let track_str: OsString = track.into();
+                let track_name = TrackName::new(&track_str, matches);
+                let track_data = TrackData::load_from_track(&track_name);
+                crate::toplevel_track::build_track(track_name.clone());
 
-            let old_path = track_name.dest_dir().join(TrackData::processed_filename());
-            let new_path = self
-                .album_name
-                .dest_dir()
-                .join(Self::track_dir_name())
-                .join(format!("{}.flac", track_data.output().name.clone()));
+                let old_path = track_name.dest_dir().join(TrackData::processed_filename());
+                let new_path = self
+                    .album_name
+                    .dest_dir()
+                    .join(Self::track_dir_name())
+                    .join(format!("{}.flac", track_data.output().name.clone()));
 
-            // yeah it's copy and paste but whatever
-            let time_old = metadata(&old_path).ok().and_then(|m| {
-                m.modified().ok().map(|d| {
-                    NaiveDateTime::from_timestamp(
-                        d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64,
-                        0,
-                    )
-                })
-            });
-            let time_new = metadata(&new_path).ok().and_then(|m| {
-                m.modified().ok().map(|d| {
-                    NaiveDateTime::from_timestamp(
-                        d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64,
-                        0,
-                    )
-                })
-            });
+                // yeah it's copy and paste but whatever
+                let time_old = metadata(&old_path).ok().and_then(|m| {
+                    m.modified().ok().map(|d| {
+                        NaiveDateTime::from_timestamp(
+                            d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64,
+                            0,
+                        )
+                    })
+                });
+                let time_new = metadata(&new_path).ok().and_then(|m| {
+                    m.modified().ok().map(|d| {
+                        NaiveDateTime::from_timestamp(
+                            d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64,
+                            0,
+                        )
+                    })
+                });
 
-            // only copy if required
-            match (time_old, time_new) {
-                (Some(old), Some(new)) if new > old => (),
-                _ => fs::copy(old_path, new_path).map(|_| ()).unwrap(),
-            }
+                // only copy if required
+                match (time_old, time_new) {
+                    (Some(old), Some(new)) if new > old => (),
+                    _ => fs::copy(old_path, new_path).map(|_| ()).unwrap(),
+                }
 
-            track_data
-        });
+                track_data
+            })
+            .collect();
+
+        let empty_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("target")
+            .join("silence")
+            .with_extension("flac");
+
+        assert!(
+            Command::new("sox")
+                .arg("-n")
+                .arg("-r")
+                .arg("44100")
+                .arg("-b")
+                .arg("16")
+                .arg("-c")
+                .arg("2")
+                .arg("-L")
+                .arg(empty_file.clone().into_os_string())
+                .arg("trim")
+                .arg("0.0")
+                .arg("2.0")
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .expect("Sox command failed")
+                .status
+                .success(),
+            "Sox command failed"
+        );
+
+        let files: Vec<OsString> = track_datas
+            .iter()
+            .map(|td| {
+                self.album_name
+                    .dest_dir()
+                    .join(Self::track_dir_name())
+                    .join(format!("{}.flac", td.output().name.clone()))
+            })
+            .map(|p| {
+                std::iter::once(p.into_os_string())
+                    .chain(std::iter::once(empty_file.clone().into_os_string()))
+            })
+            .flatten()
+            .collect();
+
+        println!("Writing album full-format file");
+        let fstr = files
+            .iter()
+            .map(|s| s.clone().into_string().unwrap())
+            .map(|name| format!("file '{}'", name.replace("'", "\\'")))
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        let fpath = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("target")
+            .join("tracklist_internal");
+        let mut ffile = File::create(fpath.clone()).unwrap();
+
+        ffile.write_all(fstr.as_bytes()).unwrap();
+
+        println!(
+            "---> ffmpeg -f concat -safe 0 -i {} -y {}",
+            fpath.clone().into_os_string().into_string().unwrap(),
+            "final.flac"
+        );
+
+        assert!(
+            Command::new("ffmpeg")
+                .arg("-f")
+                .arg("concat")
+                .arg("-safe")
+                .arg("0")
+                .arg("-i")
+                .arg(fpath.into_os_string())
+                .arg("-y")
+                .arg("final.flac")
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .expect("Build command failed")
+                .status
+                .success(),
+            "Build command failed"
+        );
 
         println!(
             "Generated album '{}' with track list:\n{}",
