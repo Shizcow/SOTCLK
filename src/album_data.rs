@@ -34,6 +34,7 @@ impl<'a> AlbumData<'a> {
     pub fn compile(&self, matches: &clap::ArgMatches) {
         self.create_dirs();
 
+        let mut out_of_date = false;
         let track_datas: Vec<TrackData> = self
             .tracks()
             .iter()
@@ -71,100 +72,107 @@ impl<'a> AlbumData<'a> {
                 // only copy if required
                 match (time_old, time_new) {
                     (Some(old), Some(new)) if new > old => (),
-                    _ => fs::copy(old_path, new_path).map(|_| ()).unwrap(),
+                    _ => {
+                        out_of_date = true;
+                        fs::copy(old_path, new_path).map(|_| ()).unwrap()
+                    }
                 }
 
                 track_data
             })
             .collect();
 
-        let empty_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("target")
-            .join("silence")
-            .with_extension("flac");
-
-        assert!(
-            Command::new("sox")
-                .arg("-n")
-                .arg("-r")
-                .arg("44100")
-                .arg("-b")
-                .arg("16")
-                .arg("-c")
-                .arg("2")
-                .arg("-L")
-                .arg(empty_file.clone().into_os_string())
-                .arg("trim")
-                .arg("0.0")
-                .arg("2.0")
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .output()
-                .expect("Sox command failed")
-                .status
-                .success(),
-            "Sox command failed"
-        );
-
-        let files: Vec<OsString> = track_datas
-            .iter()
-            .map(|td| {
-                self.album_name
-                    .dest_dir()
-                    .join(Self::track_dir_name())
-                    .join(format!("{}.flac", td.output().name.clone()))
-            })
-            .map(|p| {
-                std::iter::once(p.into_os_string())
-                    .chain(std::iter::once(empty_file.clone().into_os_string()))
-            })
-            .flatten()
-            .collect();
-
-        println!("Writing album full-format file");
-        let fstr = files
-            .iter()
-            .map(|s| s.clone().into_string().unwrap())
-            .map(|name| format!("file '{}'", name.replace("'", "\\'")))
-            .collect::<Vec<String>>()
-            .join("\n");
-
-        let fpath = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("target")
-            .join("tracklist_internal");
-        let mut ffile = File::create(fpath.clone()).unwrap();
-
-        ffile.write_all(fstr.as_bytes()).unwrap();
-
         let dest_file = self
             .album_name
             .dest_dir()
             .join(format!("{}.flac", self.album_config.album.title));
 
-        println!(
-            "---> ffmpeg -f concat -safe 0 -i {} -y {:?}",
-            fpath.clone().into_os_string().into_string().unwrap(),
-            dest_file.clone().clone().into_os_string()
-        );
+        if !out_of_date || !dest_file.exists() {
+            println!(">Album up to date; continuing");
+        } else {
+            let empty_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("target")
+                .join("silence")
+                .with_extension("flac");
 
-        assert!(
-            Command::new("ffmpeg")
-                .arg("-f")
-                .arg("concat")
-                .arg("-safe")
-                .arg("0")
-                .arg("-i")
-                .arg(fpath.into_os_string())
-                .arg("-y")
-                .arg(dest_file.into_os_string())
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .output()
-                .expect("Build command failed")
-                .status
-                .success(),
-            "Build command failed"
-        );
+            assert!(
+                Command::new("sox")
+                    .arg("-n")
+                    .arg("-r")
+                    .arg("44100")
+                    .arg("-b")
+                    .arg("16")
+                    .arg("-c")
+                    .arg("2")
+                    .arg("-L")
+                    .arg(empty_file.clone().into_os_string())
+                    .arg("trim")
+                    .arg("0.0")
+                    .arg("2.0")
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .output()
+                    .expect("Sox command failed")
+                    .status
+                    .success(),
+                "Sox command failed"
+            );
+
+            let files: Vec<OsString> = track_datas
+                .iter()
+                .map(|td| {
+                    self.album_name
+                        .dest_dir()
+                        .join(Self::track_dir_name())
+                        .join(format!("{}.flac", td.output().name.clone()))
+                })
+                .map(|p| {
+                    std::iter::once(p.into_os_string())
+                        .chain(std::iter::once(empty_file.clone().into_os_string()))
+                })
+                .flatten()
+                .collect();
+
+            println!("Writing album full-format file");
+            let fstr = files
+                .iter()
+                .map(|s| s.clone().into_string().unwrap())
+                .map(|name| format!("file '{}'", name.replace("'", "\\'")))
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            let fpath = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("target")
+                .join("tracklist_internal");
+            let mut ffile = File::create(fpath.clone()).unwrap();
+
+            ffile.write_all(fstr.as_bytes()).unwrap();
+
+            println!(
+                "---> ffmpeg -f concat -safe 0 -i {} -y {:?}",
+                fpath.clone().into_os_string().into_string().unwrap(),
+                dest_file.clone().clone().into_os_string()
+            );
+
+            assert!(
+                Command::new("ffmpeg")
+                    .arg("-f")
+                    .arg("concat")
+                    .arg("-safe")
+                    .arg("0")
+                    .arg("-i")
+                    .arg(fpath.into_os_string())
+                    .arg("-y")
+                    .arg(dest_file.into_os_string())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .output()
+                    .expect("Build command failed")
+                    .status
+                    .success(),
+                "Build command failed"
+            );
+        }
 
         println!(
             "Generated album '{}' with track list:\n{}",
