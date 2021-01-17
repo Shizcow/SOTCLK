@@ -136,10 +136,15 @@ impl<'a> AlbumData<'a> {
 
         ffile.write_all(fstr.as_bytes()).unwrap();
 
+        let dest_file = self
+            .album_name
+            .dest_dir()
+            .join(format!("{}.flac", self.album_config.album.title));
+
         println!(
-            "---> ffmpeg -f concat -safe 0 -i {} -y {}",
+            "---> ffmpeg -f concat -safe 0 -i {} -y {:?}",
             fpath.clone().into_os_string().into_string().unwrap(),
-            "final.flac"
+            dest_file.clone().clone().into_os_string()
         );
 
         assert!(
@@ -151,7 +156,7 @@ impl<'a> AlbumData<'a> {
                 .arg("-i")
                 .arg(fpath.into_os_string())
                 .arg("-y")
-                .arg("final.flac")
+                .arg(dest_file.into_os_string())
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
                 .output()
