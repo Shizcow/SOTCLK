@@ -1,5 +1,5 @@
 use chrono::naive::NaiveDateTime;
-use chrono::NaiveTime;
+use chrono::Duration;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::fs::{self, metadata, File};
@@ -189,7 +189,12 @@ impl<'a> AlbumData<'a> {
                     let track_name = TrackName::new(&track_str, matches);
                     track_name.get_runtime()
                 })
-                .collect::<Vec<NaiveTime>>()
+                .fold(vec![], |mut acc, cur| {
+                    let prev_time = acc.last().unwrap_or(&Duration::zero()).clone();
+                    let cur_absolute_time = cur + prev_time;
+                    acc.push(cur_absolute_time);
+                    acc
+                })
         );
 
         ////////////////// cleaning up

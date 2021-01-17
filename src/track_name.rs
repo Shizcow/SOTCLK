@@ -1,3 +1,4 @@
+use chrono::Duration;
 use chrono::NaiveTime;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
@@ -10,7 +11,7 @@ pub struct TrackName {
 }
 
 impl TrackName {
-    pub fn get_runtime(&self) -> NaiveTime {
+    pub fn get_runtime(&self) -> Duration {
         let cmd = Command::new("ffprobe")
             .arg("-v")
             .arg("error")
@@ -21,7 +22,7 @@ impl TrackName {
             .arg("-sexagesimal")
             .arg(
                 self.dest_dir()
-                    .join(crate::config::TrackData::unprocessed_filename())
+                    .join(crate::config::TrackData::processed_filename())
                     .into_os_string(),
             )
             .output()
@@ -49,7 +50,9 @@ impl TrackName {
             .chain(decimal.chars())
             .collect();
 
-        NaiveTime::parse_from_str(&time_unformatted, "%T.%9f").unwrap()
+        NaiveTime::parse_from_str(&time_unformatted, "%T.%9f")
+            .unwrap()
+            .signed_duration_since(NaiveTime::from_hms(0, 0, 0))
     }
     pub fn new_from_arg(matches: &clap::ArgMatches) -> Self {
         crate::toplevel_track::get_tracks(matches)
