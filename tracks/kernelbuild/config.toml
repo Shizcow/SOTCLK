@@ -1,7 +1,7 @@
 [output]
 name = "kernelbuild"
 output_command = "cd linux-5.10 && make clean && strace -f make 2>&1" # redirect for warnings
-output_buffer = "100M"
+output_buffer = "200M"
 
 [sox]
 bit_depth = 8
@@ -22,5 +22,30 @@ position = "relative"
 
 [[clip]]
 start = "0:02:10"
-end = "0:00:30"
+end = "0:00:35"
+position = "relative"
+
+[[clip]]
+start = "0:02:10"
+end = "0:00:8"
+position = "relative"
+
+[[clip]]
+start = "0:00:20"
+end = "0:01:10" # 2:18
+position = "relative"
+
+[[clip]]
+start = "0:01:16"
+end = "0:01:26" # 3:54
+position = "relative"
+
+[[clip]]
+start = "0:15:00"
+end = "0:00:20" # 4:14
+position = "relative"
+
+[[clip]]
+start = "0:07:30"
+end = "0:00:48"
 position = "relative"
