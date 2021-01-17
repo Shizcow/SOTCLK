@@ -1,0 +1,15 @@
+[output]
+name = "cat vmlinuz-linux"
+output_command = "cat /boot/vmlinuz-linux"
+output_buffer = "10M"
+
+[sox]
+bit_depth = 8
+sample_rate = 2000
+channels = 2
+encoding = "unsigned"
+
+[[clip]]
+start = "0:11:00"
+end = "0:03:00"
+position = "relative"
