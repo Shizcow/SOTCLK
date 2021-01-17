@@ -22,12 +22,8 @@ fn main() {
         .index(1)
         .required(true)
         .help("album config file name, found in albums/. Ex: 'ls'");
-    let track_subcommand = SubCommand::with_name("track")
-        .about("Build a track")
-        .arg(track_arg.clone());
-    let album_subcommand = SubCommand::with_name("album")
-        .about("Build a track")
-        .arg(album_arg.clone());
+    let track_subcommand = SubCommand::with_name("track").arg(track_arg.clone());
+    let album_subcommand = SubCommand::with_name("album").arg(album_arg.clone());
     let matches = App::new("Sounds of the Compiling Linux Kernel")
         .version("1.0")
         .about("Interpreting interesting data as raw audio")
@@ -52,8 +48,10 @@ fn main() {
             SubCommand::with_name("build")
                 .about("Build an item, internally saving the result as a .flac file or set of .flac files")
 		.setting(AppSettings::SubcommandRequired)
-                .subcommand(track_subcommand.clone())
-                .subcommand(album_subcommand.clone())
+                .subcommand(track_subcommand.clone()
+			    .about("Build a track"))
+                .subcommand(album_subcommand.clone()
+			    .about("Build an album"))
         )
         .subcommand(
             SubCommand::with_name("build-all")
@@ -63,15 +61,15 @@ fn main() {
             SubCommand::with_name("play")
                 .about("Build and play a track or album using mpv")
 		.setting(AppSettings::SubcommandRequired)
-                .subcommand(track_subcommand.clone())
-                .subcommand(album_subcommand.clone())
+                .subcommand(track_subcommand.clone().about("Play a track using mpv"))
+                .subcommand(album_subcommand.clone().about("Build an album using mpv. Plays the compiled file"))
         )
         .subcommand(
             SubCommand::with_name("clean")
                 .about("Wipe the cache of a track or album, triggering a rebuild")
 		.setting(AppSettings::SubcommandRequired)
-                .subcommand(track_subcommand.clone())
-                .subcommand(album_subcommand.clone())
+                .subcommand(track_subcommand.clone().about("Clean a track"))
+                .subcommand(album_subcommand.clone().about("Clean an album, but not its individual tracks"))
         )
         .subcommand(
             SubCommand::with_name("clean-all")
@@ -79,19 +77,21 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("export")
-                .about("Save a track's .flac somewhere")
+                .about("Save a track's .flac somewhere, or export an entire album's directory")
                 .subcommand(track_subcommand.clone().arg(
                     Arg::with_name("output_file")
                         .index(2)
                         .required(true)
-                        .help("Filename to save to. Ex: exported.flac"),
-                ))
+                        .help("Filename to save to. Ex: exported.flac")
+                )
+			.about("Export a .flac somewhere"))
                 .subcommand(album_subcommand.clone().arg(
                     Arg::with_name("output_dir")
                         .index(2)
                         .required(true)
-                        .help("Directory to save to. A subdirectory with all the album content will be created"),
-                ))
+                        .help("Directory to save to. A subdirectory with all the album content will be created")
+                )
+			    .about("Export the entire album directory. Includes individual tracks, a compiled master-track, and tracklist with some additional info"))
         )
         .get_matches();
 
