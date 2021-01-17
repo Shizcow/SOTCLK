@@ -100,7 +100,6 @@ impl ClipProcess for Clips {
                         .start
                         .signed_duration_since(NaiveTime::from_hms(0, 0, 0));
                     self[clip_n].end += start_time;
-                    self[clip_n].end += offset;
                     self[clip_n].position = "absolute".to_owned();
                 }
             }
