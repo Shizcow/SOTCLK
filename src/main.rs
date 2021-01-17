@@ -10,6 +10,8 @@ mod toplevel_track;
 mod track_name;
 
 use clap::{App, AppSettings, Arg, SubCommand};
+use std::fs;
+use std::path::PathBuf;
 
 fn main() {
     let track_arg = Arg::with_name("track")
@@ -70,6 +72,10 @@ fn main() {
                 .subcommand(album_subcommand.clone())
         )
         .subcommand(
+            SubCommand::with_name("clean-all")
+                .about("Wipe all caches")
+        )
+        .subcommand(
             SubCommand::with_name("export")
                 .about("Save a track's .flac somewhere")
                 .arg(track_arg.clone())
@@ -82,7 +88,20 @@ fn main() {
         )
         .get_matches();
 
-    if let Some(matches) = matches.subcommand_matches("clean") {
+    if let Some(_) = matches.subcommand_matches("clean-all") {
+        fs::remove_dir_all(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("target")
+                .join("tracks"),
+        )
+        .unwrap();
+        fs::remove_dir_all(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("target")
+                .join("albums"),
+        )
+        .unwrap();
+    } else if let Some(matches) = matches.subcommand_matches("clean") {
         if let Some(matches) = matches.subcommand_matches("track") {
             toplevel_track::clean_arg(matches);
         } else if let Some(matches) = matches.subcommand_matches("album") {
