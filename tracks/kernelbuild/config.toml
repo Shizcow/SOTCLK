@@ -1,0 +1,16 @@
+[output]
+name = "kernelbuild"
+output_command = "cd linux-5.10 && make clean && strace -f make 2>&1" # redirect for warnings
+output_buffer = "100M" # how much initial data to capture
+
+[sox]
+bit_depth = 8
+sample_rate = 44000
+channels = 2
+encoding = "unsigned"
+
+[build]
+build_command = "tar -xvf v5.10 && cd linux-5.10 && make defconfig"
+http_sources = ["https://codeload.github.com/torvalds/linux/tar.gz/v5.10"]
+git_sources = []
+copy_me = false
