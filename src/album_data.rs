@@ -1,4 +1,5 @@
 use chrono::naive::NaiveDateTime;
+use chrono::NaiveTime;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::fs::{self, metadata, File};
@@ -33,6 +34,8 @@ impl<'a> AlbumData<'a> {
 
     pub fn compile(&self, matches: &clap::ArgMatches) {
         self.create_dirs();
+
+        //////////////// setup and cache
 
         let mut out_of_date = false;
         let track_datas: Vec<TrackData> = self
@@ -90,6 +93,8 @@ impl<'a> AlbumData<'a> {
         if !out_of_date && dest_file.exists() {
             println!(">Album up to date; continuing");
         } else {
+            ////////////// master-cut creation
+
             let empty_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("target")
                 .join("silence")
@@ -173,6 +178,21 @@ impl<'a> AlbumData<'a> {
                 "Build command failed"
             );
         }
+
+        ////////////////// tracklist generation
+        println!(
+            "{:?}",
+            self.tracks()
+                .iter()
+                .map(|track| {
+                    let track_str: OsString = track.into();
+                    let track_name = TrackName::new(&track_str, matches);
+                    track_name.get_runtime()
+                })
+                .collect::<Vec<NaiveTime>>()
+        );
+
+        ////////////////// cleaning up
 
         println!(
             "Generated album '{}' with track list:\n{}",
