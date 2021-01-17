@@ -190,8 +190,8 @@ impl<'a> AlbumData<'a> {
                     track_name.get_runtime()
                 })
                 .fold(vec![], |mut acc, cur| {
-                    let prev_time = acc.last().unwrap_or(&Duration::zero()).clone();
-                    let cur_absolute_time = cur + prev_time;
+                    let prev_time = acc.last().unwrap_or(&Duration::seconds(-1)).clone();
+                    let cur_absolute_time = cur + prev_time + Duration::seconds(2);
                     acc.push(cur_absolute_time);
                     acc
                 })
