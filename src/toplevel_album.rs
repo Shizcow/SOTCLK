@@ -22,14 +22,23 @@ pub fn export_arg(matches: &clap::ArgMatches) {
     let album_name = AlbumName::new_from_arg(matches);
     let album_data = AlbumData::load_from_track(&album_name);
 
+    let old_dir = album_name.dest_dir();
+    let new_dir = PathBuf::from(matches.value_of("output_dir").unwrap())
+        .join(album_data.album_config.album.title);
+
+    Command::new("rm")
+        .arg("-rf")
+        .arg(&new_dir)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()
+        .expect("export command failed");
+
     assert!(
         Command::new("cp")
             .arg("-r")
-            .arg(album_name.dest_dir())
-            .arg(
-                PathBuf::from(matches.value_of("output_dir").unwrap())
-                    .join(album_data.album_config.album.title)
-            )
+            .arg(old_dir)
+            .arg(new_dir)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .output()
