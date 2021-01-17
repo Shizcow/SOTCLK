@@ -27,7 +27,7 @@ cargo run -- build-all
 This will build all tracks in the [`tracks/`](tracks) directory. This may include downloading
 external files, cloning git repositories, and executing build commands. This step also takes
 care of `sox` and `ffmpeg` processing. Built tracks are stored internally; see the following
-section for playing.
+section for playing. `build-all` also builds albums.
 
 Single tracks can also be built with the following command:
 ```sh
@@ -106,5 +106,5 @@ The following dependencies are required during building if a project specifies s
 - `curl` and `libcurl` for http sources
 - `git` for git sources
 
-`mpv` is also required to play files through `cargo`. Options for other exporting and
-using other players will come later.
+`mpv` is also required to play files through `cargo`. If you need to use a different
+player, export a track/album and play it from that directory.
