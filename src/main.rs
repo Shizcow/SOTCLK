@@ -62,7 +62,9 @@ fn main() {
         .subcommand(
             SubCommand::with_name("play")
                 .about("Build and play a track using mpv")
-                .arg(track_arg.clone()),
+		.setting(AppSettings::SubcommandRequired)
+                .subcommand(track_subcommand.clone())
+                .subcommand(album_subcommand.clone())
         )
         .subcommand(
             SubCommand::with_name("clean")
@@ -121,8 +123,13 @@ fn main() {
             println!("Building albums...");
             toplevel_album::process_albums(matches);
         } else if let Some(matches) = matches.subcommand_matches("play") {
-            toplevel_track::build_arg(matches);
-            toplevel_track::play_arg(matches);
+            if let Some(matches) = matches.subcommand_matches("track") {
+                toplevel_track::build_arg(matches);
+                toplevel_track::play_arg(matches);
+            } else if let Some(matches) = matches.subcommand_matches("album") {
+                toplevel_album::build_arg(matches);
+                toplevel_album::play_arg(matches);
+            }
         } else if let Some(matches) = matches.subcommand_matches("export") {
             toplevel_track::build_arg(matches);
             toplevel_track::export_arg(matches);

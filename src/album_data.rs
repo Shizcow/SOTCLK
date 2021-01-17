@@ -15,7 +15,7 @@ use crate::track_name::TrackName;
 #[derive(Clone, Debug)]
 pub struct AlbumData<'a> {
     pub album_config: AlbumConfig,
-    album_name: &'a AlbumName,
+    pub album_name: &'a AlbumName,
 }
 impl<'a> AlbumData<'a> {
     pub fn load_from_track(album_name: &'a AlbumName) -> Self {
@@ -199,7 +199,7 @@ impl<'a> AlbumData<'a> {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct AlbumConfig {
-    album: Album, // serde crap
+    pub album: Album, // serde crap
 }
 
 impl Deref for AlbumConfig {

@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 
 use crate::album_data::AlbumData;
 use crate::album_name::AlbumName;
@@ -19,6 +20,28 @@ pub fn clean_arg(matches: &clap::ArgMatches) {
 pub fn build_arg(matches: &clap::ArgMatches) {
     build_album(AlbumName::new_from_arg(matches), matches);
 }
+
+pub fn play_arg(matches: &clap::ArgMatches) {
+    println!("Playing via mpv...");
+    let album_name = AlbumName::new_from_arg(matches);
+    let album_data = AlbumData::load_from_track(&album_name);
+    assert!(
+        Command::new("mpv")
+            .arg(
+                album_name
+                    .dest_dir()
+                    .join(format!("{}.flac", album_data.album_config.album.title))
+            )
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .expect("mpv command failed")
+            .status
+            .success(),
+        "mpv command failed"
+    );
+}
+
 pub fn get_albums(matches: &clap::ArgMatches) -> Vec<AlbumName> {
     fs::read_dir(
         matches
