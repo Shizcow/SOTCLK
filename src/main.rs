@@ -20,6 +20,12 @@ fn main() {
         .index(1)
         .required(true)
         .help("album config file name, found in albums/. Ex: 'ls'");
+    let track_subcommand = SubCommand::with_name("track")
+        .about("Build a track")
+        .arg(track_arg.clone());
+    let album_subcommand = SubCommand::with_name("album")
+        .about("Build a track")
+        .arg(album_arg.clone());
     let matches = App::new("Sounds of the Compiling Linux Kernel")
         .version("1.0")
         .about("Interpreting interesting data as raw audio")
@@ -44,20 +50,12 @@ fn main() {
             SubCommand::with_name("build")
                 .about("Build an item, internally saving the result as a .flac file or set of .flac files")
 		.setting(AppSettings::SubcommandRequired)
-                .subcommand(
-                    SubCommand::with_name("track")
-                        .about("Build a track")
-                        .arg(track_arg.clone()),
-                )
-                .subcommand(
-                    SubCommand::with_name("album")
-                        .about("Build a track")
-                        .arg(album_arg.clone()),
-                ),
+                .subcommand(track_subcommand.clone())
+                .subcommand(album_subcommand.clone())
         )
         .subcommand(
             SubCommand::with_name("build-all")
-                .about("Builds all tracks, internally saving results as .flac"),
+                .about("Builds all tracks and albums, internally saving results as .flac"),
         )
         .subcommand(
             SubCommand::with_name("play")
@@ -67,7 +65,9 @@ fn main() {
         .subcommand(
             SubCommand::with_name("clean")
                 .about("Wipe the cache of a track, triggering a rebuild")
-                .arg(track_arg.clone()),
+		.setting(AppSettings::SubcommandRequired)
+                .subcommand(track_subcommand.clone())
+                .subcommand(album_subcommand.clone())
         )
         .subcommand(
             SubCommand::with_name("export")
@@ -83,7 +83,11 @@ fn main() {
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("clean") {
-        toplevel_track::clean_arg(matches);
+        if let Some(matches) = matches.subcommand_matches("track") {
+            toplevel_track::clean_arg(matches);
+        } else if let Some(matches) = matches.subcommand_matches("album") {
+            toplevel_album::clean_arg(matches);
+        }
     } else {
         toplevel_track::setup_directories(&matches);
         if let Some(matches) = matches.subcommand_matches("build") {
