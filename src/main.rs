@@ -61,14 +61,14 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("play")
-                .about("Build and play a track using mpv")
+                .about("Build and play a track or album using mpv")
 		.setting(AppSettings::SubcommandRequired)
                 .subcommand(track_subcommand.clone())
                 .subcommand(album_subcommand.clone())
         )
         .subcommand(
             SubCommand::with_name("clean")
-                .about("Wipe the cache of a track, triggering a rebuild")
+                .about("Wipe the cache of a track or album, triggering a rebuild")
 		.setting(AppSettings::SubcommandRequired)
                 .subcommand(track_subcommand.clone())
                 .subcommand(album_subcommand.clone())
@@ -80,13 +80,18 @@ fn main() {
         .subcommand(
             SubCommand::with_name("export")
                 .about("Save a track's .flac somewhere")
-                .arg(track_arg.clone())
-                .arg(
+                .subcommand(track_subcommand.clone().arg(
                     Arg::with_name("output_file")
                         .index(2)
                         .required(true)
                         .help("Filename to save to. Ex: exported.flac"),
-                ),
+                ))
+                .subcommand(album_subcommand.clone().arg(
+                    Arg::with_name("output_dir")
+                        .index(2)
+                        .required(true)
+                        .help("Directory to save to. A subdirectory with all the album content will be created"),
+                ))
         )
         .get_matches();
 
@@ -131,8 +136,13 @@ fn main() {
                 toplevel_album::play_arg(matches);
             }
         } else if let Some(matches) = matches.subcommand_matches("export") {
-            toplevel_track::build_arg(matches);
-            toplevel_track::export_arg(matches);
+            if let Some(matches) = matches.subcommand_matches("track") {
+                toplevel_track::build_arg(matches);
+                toplevel_track::export_arg(matches);
+            } else if let Some(matches) = matches.subcommand_matches("album") {
+                toplevel_album::build_arg(matches);
+                toplevel_album::export_arg(matches);
+            }
         }
     }
 

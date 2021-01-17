@@ -17,6 +17,29 @@ pub fn clean_arg(matches: &clap::ArgMatches) {
     std::fs::remove_dir_all(album_name.dest_dir()).ok(); // empty cache
 }
 
+pub fn export_arg(matches: &clap::ArgMatches) {
+    println!("Exporting...");
+    let album_name = AlbumName::new_from_arg(matches);
+    let album_data = AlbumData::load_from_track(&album_name);
+
+    assert!(
+        Command::new("cp")
+            .arg("-r")
+            .arg(album_name.dest_dir())
+            .arg(
+                PathBuf::from(matches.value_of("output_dir").unwrap())
+                    .join(album_data.album_config.album.title)
+            )
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .expect("export command failed")
+            .status
+            .success(),
+        "export command failed"
+    );
+}
+
 pub fn build_arg(matches: &clap::ArgMatches) {
     build_album(AlbumName::new_from_arg(matches), matches);
 }
