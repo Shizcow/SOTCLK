@@ -1,5 +1,6 @@
 use chrono::naive::NaiveDateTime;
 use chrono::Duration;
+use chrono::NaiveTime;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::fs::{self, metadata, File};
@@ -180,22 +181,61 @@ impl<'a> AlbumData<'a> {
         }
 
         ////////////////// tracklist generation
-        println!(
-            "{:?}",
-            self.tracks()
+        let mut tracklist_pre = self
+            .tracks()
+            .iter()
+            .map(|track| {
+                let track_str: OsString = track.into();
+                let track_name = TrackName::new(&track_str, matches);
+                track_name.get_runtime()
+            })
+            .fold(vec![], |mut acc, cur| {
+                let prev_time = acc.last().unwrap_or(&Duration::seconds(-1)).clone();
+                let cur_absolute_time = cur + prev_time + Duration::seconds(2);
+                acc.push(cur_absolute_time);
+                acc
+            });
+
+        let mut tracklist = vec![Duration::seconds(0)];
+        tracklist.append(&mut tracklist_pre);
+
+        let format_string = if tracklist.last().unwrap() >= &Duration::hours(1) {
+            "%H:%M:%S"
+        } else {
+            "%M:%S"
+        };
+
+        let tracklist_string = format!(
+            "{}\n\nTracklist:\n{}\n",
+            self.album_config.title,
+            track_datas
                 .iter()
-                .map(|track| {
-                    let track_str: OsString = track.into();
-                    let track_name = TrackName::new(&track_str, matches);
-                    track_name.get_runtime()
+                .map(|t| t.output().name.clone())
+                .enumerate()
+                .map(|(i, s)| format!(
+                    "{} {}",
+                    (NaiveTime::from_hms(0, 0, 0) + tracklist[i]).format(format_string),
+                    s
+                ))
+                .map(|s| if s.chars().nth(0).unwrap() == '0' {
+                    s.chars().skip(1).collect()
+                } else {
+                    s
                 })
-                .fold(vec![], |mut acc, cur| {
-                    let prev_time = acc.last().unwrap_or(&Duration::seconds(-1)).clone();
-                    let cur_absolute_time = cur + prev_time + Duration::seconds(2);
-                    acc.push(cur_absolute_time);
-                    acc
-                })
+                .collect::<Vec<String>>()
+                .join("\n")
         );
+
+        let tracklist_path = self
+            .album_name
+            .dest_dir()
+            .join("tracklist")
+            .with_extension("txt");
+        let mut tracklist_file = File::create(tracklist_path.clone()).unwrap();
+
+        tracklist_file
+            .write_all(tracklist_string.as_bytes())
+            .unwrap();
 
         ////////////////// cleaning up
 
@@ -206,7 +246,7 @@ impl<'a> AlbumData<'a> {
                 .into_iter()
                 .map(|t| t.output().name.clone())
                 .enumerate()
-                .map(|(i, s)| format!("{}: {}", i, s))
+                .map(|(i, s)| format!("{} - {}", i, s))
                 .collect::<Vec<String>>()
                 .join("\n")
         );
