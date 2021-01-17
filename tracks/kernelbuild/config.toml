@@ -16,12 +16,11 @@ git_sources = []
 copy_me = false
 
 [[clip]]
-start = "0:01:10"
-end = "0:00:50"
+start = "0:01:20"
+end = "0:00:40"
 position = "relative"
 
-
-# [[clip]]
-# start = "0:02:10"
-# end = "0:05:00"
-# position = "relative"
+[[clip]]
+start = "0:02:10"
+end = "0:00:30"
+position = "relative"
