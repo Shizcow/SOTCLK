@@ -1,7 +1,9 @@
+use chrono::naive::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
-use std::fs;
+use std::fs::{self, metadata};
 use std::ops::Deref;
+use std::time::SystemTime;
 
 use crate::album_name::AlbumName;
 use crate::config::TrackData;
@@ -35,15 +37,36 @@ impl<'a> AlbumData<'a> {
             let track_data = TrackData::load_from_track(&track_name);
             crate::toplevel_track::build_track(track_name.clone());
 
-            std::fs::copy(
-                track_name.dest_dir().join(TrackData::processed_filename()),
-                self.album_name
-                    .dest_dir()
-                    .join(Self::track_dir_name())
-                    .join(track_data.output().name.clone())
-                    .with_extension("flac"),
-            )
-            .unwrap();
+            let old_path = track_name.dest_dir().join(TrackData::processed_filename());
+            let new_path = self
+                .album_name
+                .dest_dir()
+                .join(Self::track_dir_name())
+                .join(format!("{}.flac", track_data.output().name.clone()));
+
+            // yeah it's copy and paste but whatever
+            let time_old = metadata(&old_path).ok().and_then(|m| {
+                m.modified().ok().map(|d| {
+                    NaiveDateTime::from_timestamp(
+                        d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64,
+                        0,
+                    )
+                })
+            });
+            let time_new = metadata(&new_path).ok().and_then(|m| {
+                m.modified().ok().map(|d| {
+                    NaiveDateTime::from_timestamp(
+                        d.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as i64,
+                        0,
+                    )
+                })
+            });
+
+            // only copy if required
+            match (time_old, time_new) {
+                (Some(old), Some(new)) if new > old => (),
+                _ => fs::copy(old_path, new_path).map(|_| ()).unwrap(),
+            }
 
             track_data
         });
