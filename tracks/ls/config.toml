@@ -1,7 +1,7 @@
 [output]
 name = "ls -R"
 output_command = "ls -R /"
-output_buffer = "10M" # how much initial data to capture
+output_buffer = "75M"
 
 [sox]
 bit_depth = 8
@@ -12,11 +12,21 @@ encoding = "unsigned"
 tempo = 1.0 # optional, defaults to 1.0
 
 [[clip]]
-start = "0:00:01" # %T format
-end = "0:1:00" # end is absolute too!
+start = "0:00:00"
+end = "0:01:20"
 position = "absolute"
 
 [[clip]]
-start = "0:00:10" # %T format
-end = "0:1:00" # end is relative too!
+start = "0:02:00"
+end = "0:01:40" # 3:00
+position = "relative"
+
+[[clip]]
+start = "0:02:30"
+end = "0:01:30" # 4:30
+position = "relative"
+
+[[clip]]
+start = "0:04:30"
+end = "0:00:50"
 position = "relative"
