@@ -2,7 +2,6 @@
 name = "ls -R"
 output_command = "ls -R /"
 output_buffer = "10M" # how much initial data to capture
-cache = false
 
 [sox]
 bit_depth = 8

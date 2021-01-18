@@ -1,0 +1,32 @@
+[output]
+name = "rg e"
+output_command = "rg e /"
+output_buffer = "100M" # how much initial data to capture
+
+[sox]
+bit_depth = 8
+sample_rate = 44100
+channels = 2
+encoding = "unsigned"
+#other_options = "" # optional
+tempo = 1.0 # optional, defaults to 1.0
+
+[[clip]]
+start = "0:00:00" # %T format
+end = "0:01:30" # end is absolute too!
+position = "absolute"
+
+[[clip]]
+start = "0:03:20" # %T format
+end = "0:01:40" # end is absolute too!
+position = "relative"
+
+[[clip]]
+start = "0:02:50" # %T format
+end = "0:00:30" # end is absolute too!
+position = "relative"
+
+[[clip]]
+start = "0:03:30" # %T format
+end = "0:01:30" # end is absolute too!
+position = "relative"
