@@ -1,0 +1,17 @@
+[output]
+name = "kernelbuild"
+output_command = "cd sbcl && cat .gitignore | xargs rm -rf && sh make.sh clisp --fancy && cd tests && sh ./run-tests.sh && cd .. && make -C doc/manual info" # redirect for warnings
+output_buffer = "10M"
+
+[sox]
+bit_depth = 8
+sample_rate = 44000
+channels = 1
+encoding = "unsigned"
+tempo = 0.25
+
+[build]
+build_command = ""
+http_sources = []
+git_sources = ["git://git.code.sf.net/p/sbcl/sbcl"]
+copy_me = false

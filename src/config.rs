@@ -152,6 +152,7 @@ pub struct Sox {
     pub channels: u32,
     pub encoding: String,
     pub other_options: Option<String>,
+    pub tempo: Option<f64>,
 }
 
 impl Cache for Sox {

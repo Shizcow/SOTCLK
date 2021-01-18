@@ -22,24 +22,42 @@ pub struct Clip {
 }
 
 pub trait ClipProcess {
-    fn process(self, track_name: &TrackName);
+    fn process(self, track_name: &TrackName, tempo: f64);
 }
 
 impl ClipProcess for Clips {
-    fn process(mut self, track_name: &TrackName) {
+    fn process(mut self, track_name: &TrackName, mut tempo: f64) {
+        let mut tempo_modifiers = vec![];
+        while tempo > 2.0 {
+            tempo_modifiers.push(2.0);
+            tempo /= 2.0;
+        }
+        while tempo < 0.5 {
+            tempo_modifiers.push(0.5);
+            tempo *= 2.0;
+        }
+        tempo_modifiers.push(tempo);
+
+        let tempo_arg = tempo_modifiers
+            .into_iter()
+            .map(|a| format!("atempo={}", a))
+            .collect::<Vec<String>>()
+            .join(",");
+
         std::fs::remove_file(track_name.dest_dir().join(TrackData::processed_filename())).ok();
         if self.len() == 0 {
             // Re-encoding fixes any potential errors that sox may encounter
             // It's pretty fast for flac anyway
             // https://gist.github.com/jgehrcke/5572c50bedf998a1fae40a80afa80357#file-flac-reencode-py-L24-L29
             println!(
-                "---> ffmpeg -i {} {}",
+                "---> ffmpeg -i {} -filter:a {} {}",
                 track_name
                     .dest_dir()
                     .join(TrackData::unprocessed_filename())
                     .clone()
                     .into_os_string()
                     .to_string_lossy(),
+                tempo_arg,
                 track_name
                     .dest_dir()
                     .join(TrackData::processed_filename())
@@ -55,6 +73,8 @@ impl ClipProcess for Clips {
                             .dest_dir()
                             .join(TrackData::unprocessed_filename())
                     )
+                    .arg("-filter:a")
+                    .arg(tempo_arg)
                     .arg(track_name.dest_dir().join(TrackData::processed_filename()))
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit())
@@ -105,7 +125,8 @@ impl ClipProcess for Clips {
             }
 
             let filter_arg = format!(
-                "aselect='{}',asetpts=N/SR/TB",
+                "{},aselect='{}',asetpts=N/SR/TB",
+                tempo_arg,
                 self.into_iter()
                     .map(|clip| {
                         format!(

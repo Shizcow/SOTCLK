@@ -2,6 +2,7 @@
 name = "ls -R"
 output_command = "ls -R /"
 output_buffer = "10M" # how much initial data to capture
+cache = false
 
 [sox]
 bit_depth = 8
@@ -9,6 +10,7 @@ sample_rate = 44000
 channels = 2
 encoding = "unsigned"
 #other_options = "" # optional
+tempo = 1.0 # optional, defaults to 1.0
 
 [[clip]]
 start = "0:00:01" # %T format

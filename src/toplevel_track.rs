@@ -151,7 +151,9 @@ pub fn build_track(track_name: TrackName) {
 
     if config.updates.needs_ffmpeg_update {
         config.clips().write_cache(&track_name);
-        config.clips().process(&track_name); // edit message is displayed internally, if required
+        config
+            .clips()
+            .process(&track_name, config.sox().tempo.unwrap_or(1.0)); // edit message is displayed internally, if required
     }
 
     println!("--> Finished processing track '{}'", config.output().name);
