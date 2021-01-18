@@ -101,13 +101,13 @@ fn main() {
                 .join("target")
                 .join("tracks"),
         )
-        .unwrap();
+        .ok();
         fs::remove_dir_all(
             PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("target")
                 .join("albums"),
         )
-        .unwrap();
+            .ok();
     } else if let Some(matches) = matches.subcommand_matches("clean") {
         if let Some(matches) = matches.subcommand_matches("track") {
             toplevel_track::clean_arg(matches);

@@ -1,7 +1,7 @@
 [output]
 name = "kernelbuild"
 output_command = "cd sbcl && cat .gitignore | xargs rm -rf && sh make.sh clisp --fancy && cd tests && sh ./run-tests.sh && cd .. && make -C doc/manual info" # redirect for warnings
-output_buffer = "10M"
+output_buffer = "100M" # will run out before this limit
 
 [sox]
 bit_depth = 8
