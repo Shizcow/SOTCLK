@@ -1,7 +1,7 @@
 [output]
 name = "find journal | xargs cat"
 output_command = "find /var/log/journal | xargs cat"
-output_buffer = "10M" # how much initial data to capture
+output_buffer = "20M" # how much initial data to capture
 
 [sox]
 bit_depth = 8
@@ -18,5 +18,5 @@ position = "absolute"
 
 [[clip]]
 start = "0:00:35"
-end = "0:01:00"
+end = "0:00:54"
 position = "relative"
