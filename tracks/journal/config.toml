@@ -1,0 +1,22 @@
+[output]
+name = "find journal | xargs cat"
+output_command = "find /var/log/journal | xargs cat"
+output_buffer = "10M" # how much initial data to capture
+
+[sox]
+bit_depth = 8
+sample_rate = 44000
+channels = 2
+encoding = "unsigned"
+#other_options = "" # optional
+tempo = 1.0 # optional, defaults to 1.0
+
+[[clip]]
+start = "0:00:15"
+end = "0:01:00"
+position = "absolute"
+
+[[clip]]
+start = "0:00:35"
+end = "0:01:00"
+position = "relative"
