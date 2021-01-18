@@ -48,6 +48,10 @@ encoding = "unsigned"
 # `other_options` is an optional field
 # It injects options directly into the sox invocation command
 other_options = ""
+# `tempo` is an optional field
+# It tells ffmpeg to speed up or slow down audio during processing
+# Can be used to increase the sample_rate while keeping the same data, often improving quality
+tempo = 0.20
 
 # [build] is an optional item
 # If present, a build directory will be created for pre-output processing
