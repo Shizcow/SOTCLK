@@ -1,16 +1,17 @@
 [output]
 name = "classroom.blend"
 output_command = "cat classroom/classroom.blend"
-output_buffer = "1M" # how much initial data to capture
+output_buffer = "50M" # how much initial data to capture
 #debug = true # option, false by default
 #cache = true # option, true by default
 
 [sox]
 bit_depth = 8
-sample_rate = 44000
+sample_rate = 22100
 channels = 2
 encoding = "unsigned"
 #other_options = "" # optional
+tempo = 1.0
 
 # optional
 [build]
@@ -21,3 +22,14 @@ http_sources = [
 ]
 git_sources = []
 copy_me = false
+
+
+[[clip]]
+start = "0:00:00"
+end = "0:01:18"
+position = "absolute"
+
+[[clip]]
+start = "0:08:42"
+end = "0:10:00"
+position = "absolute" # runs out of data but I'm not fixing how it's clipped
