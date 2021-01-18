@@ -71,18 +71,22 @@ pub fn process_tracks(matches: &clap::ArgMatches) {
 
 pub fn setup_directories(matches: &clap::ArgMatches) {
     println!("Creating build directories...");
-    for dir in fs::read_dir(
-        matches
-            .value_of("track_dir")
-            .map(|dirname| PathBuf::from(dirname))
-            .unwrap_or(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tracks")),
-    )
-    .unwrap()
-    .map(|res| res.map(|e| e.path()).unwrap())
+    let track_root_dir = matches
+        .value_of("track_dir")
+        .map(|dirname| PathBuf::from(dirname))
+        .unwrap_or(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tracks"));
+    let target_root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target");
+
+    for dir in fs::read_dir(track_root_dir)
+        .unwrap()
+        .map(|res| res.map(|e| e.path()).unwrap())
     {
-        let mut new_dir: PathBuf = ["target", "tracks"].iter().collect();
-        new_dir.push(dir.file_name().unwrap());
-        fs::create_dir_all(new_dir.into_os_string()).unwrap();
+        fs::create_dir_all(
+            target_root_dir
+                .join("tracks")
+                .join(dir.file_name().unwrap()),
+        )
+        .unwrap();
     }
 }
 

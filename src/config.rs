@@ -53,8 +53,10 @@ impl TrackData {
         "processed.flac"
     }
     pub fn load_from_track(track_name: &TrackName) -> Self {
+        let filename = track_name.source_dir().join("config.toml");
         let track_config: TrackConfig = toml::from_str(
-            &fs::read_to_string(track_name.source_dir().join("config.toml")).unwrap(),
+            &fs::read_to_string(filename.clone())
+                .expect(&format!("could not read file {}", filename.display())),
         )
         .unwrap();
 
