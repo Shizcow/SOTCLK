@@ -1,0 +1,48 @@
+[output]
+name = "tensorflow"
+output_command = "cd tensorflow && bazel clean && bazel build --config=opt -s --explain --verbose_explanations //tensorflow/tools/pip_package:all 2>&1" # redirect for -s
+output_buffer = "10M"
+
+[sox]
+bit_depth = 8
+sample_rate = 22100
+channels = 1
+encoding = "unsigned"
+tempo = 0.5
+
+[build]
+build_command = "cd tensorflow && yes '' | ./configure"
+http_sources = []
+git_sources = ["https://github.com/tensorflow/tensorflow"]
+git_update = false
+copy_me = false
+
+[[clip]]
+start = "0:00:00"
+end = "0:01:25"
+position = "absolute"
+
+[[clip]]
+start = "0:05:00"
+end = "0:05:40"
+position = "absolute"
+
+[[clip]]
+start = "0:05:50"
+end = "0:06:22"
+position = "absolute"
+
+[[clip]]
+start = "0:06:30"
+end = "0:07:30"
+position = "absolute"
+
+[[clip]]
+start = "0:09:45"
+end = "0:10:30"
+position = "absolute"
+
+[[clip]]
+start = "0:15:10"
+end = "0:15:48"
+position = "absolute"

@@ -16,6 +16,7 @@ pub struct Build {
     pub build_command: String,
     pub http_sources: Vec<String>,
     pub git_sources: Vec<String>,
+    pub git_update: Option<bool>,
     pub always_rebuild: Option<bool>,
     pub copy_me: bool,
 }
@@ -204,58 +205,60 @@ impl Build {
                 );
                 out_of_date = true;
             } else {
-                assert!(
-                    Command::new("git")
-                        .arg("remote")
-                        .arg("update")
+                if self.git_update != Some(false) {
+                    assert!(
+                        Command::new("git")
+                            .arg("remote")
+                            .arg("update")
+                            .current_dir(&git_dir)
+                            .stdout(Stdio::inherit())
+                            .stderr(Stdio::inherit())
+                            .output()
+                            .expect("Git remote failed")
+                            .status
+                            .success(),
+                        "Git remote failed"
+                    );
+                    let git_status = Command::new("git")
+                        .arg("status")
+                        .arg("-uno")
                         .current_dir(&git_dir)
-                        .stdout(Stdio::inherit())
-                        .stderr(Stdio::inherit())
                         .output()
-                        .expect("Git remote failed")
-                        .status
-                        .success(),
-                    "Git remote failed"
-                );
-                let git_status = Command::new("git")
-                    .arg("status")
-                    .arg("-uno")
-                    .current_dir(&git_dir)
-                    .output()
-                    .expect("Git status failed");
-                assert!(git_status.status.success(), "Git status failed");
-                if String::from_utf8_lossy(&git_status.stdout)
-                    .lines()
-                    .nth(1)
-                    .unwrap_or("")
-                    .starts_with("Your branch is behind")
-                {
-                    out_of_date = true;
-                    assert!(
-                        Command::new("git")
-                            .arg("reset")
-                            .arg("--hard")
-                            .current_dir(&git_dir)
-                            .stdout(Stdio::inherit())
-                            .stderr(Stdio::inherit())
-                            .output()
-                            .expect("Git reset failed")
-                            .status
-                            .success(),
-                        "Git reset failed"
-                    );
-                    assert!(
-                        Command::new("git")
-                            .arg("pull")
-                            .current_dir(&git_dir)
-                            .stdout(Stdio::inherit())
-                            .stderr(Stdio::inherit())
-                            .output()
-                            .expect("Git pull failed")
-                            .status
-                            .success(),
-                        "Git pull failed"
-                    );
+                        .expect("Git status failed");
+                    assert!(git_status.status.success(), "Git status failed");
+                    if String::from_utf8_lossy(&git_status.stdout)
+                        .lines()
+                        .nth(1)
+                        .unwrap_or("")
+                        .starts_with("Your branch is behind")
+                    {
+                        out_of_date = true;
+                        assert!(
+                            Command::new("git")
+                                .arg("reset")
+                                .arg("--hard")
+                                .current_dir(&git_dir)
+                                .stdout(Stdio::inherit())
+                                .stderr(Stdio::inherit())
+                                .output()
+                                .expect("Git reset failed")
+                                .status
+                                .success(),
+                            "Git reset failed"
+                        );
+                        assert!(
+                            Command::new("git")
+                                .arg("pull")
+                                .current_dir(&git_dir)
+                                .stdout(Stdio::inherit())
+                                .stderr(Stdio::inherit())
+                                .output()
+                                .expect("Git pull failed")
+                                .status
+                                .success(),
+                            "Git pull failed"
+                        );
+                    }
                 }
             }
         }

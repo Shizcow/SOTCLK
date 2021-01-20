@@ -14,4 +14,5 @@ tempo = 0.25
 build_command = ""
 http_sources = []
 git_sources = ["git://git.code.sf.net/p/sbcl/sbcl"]
+git_update = false
 copy_me = false

@@ -89,6 +89,10 @@ git_sources = [
 # Copied files reside directly within the build directory, not within a created sub-directory
 # These files are always copied and cached. Changing in the track directory triggeres a rebuild
 copy_me = true
+# `git_update` is an optional field
+# Suppresses updating cached git dirs
+# For fast moving projects, can make sure a rebuild isn't triggered too often
+git_update = false
 
 # [[clip]] can be specified zero or more times
 # [[clip]] is order sensitive
