@@ -1,0 +1,23 @@
+[output]
+name = "protesailos's dotemacs"
+output_command = "cat dotfiles/emacs/.emacs.d/emacs-init.org"
+output_buffer = "75M"
+
+[sox]
+bit_depth = 8
+sample_rate = 2000
+channels = 2
+encoding = "unsigned"
+#other_options = "" # optional
+tempo = 1.0 # optional, defaults to 1.0
+
+[build]
+build_command = ""
+http_sources = []
+git_sources = ["https://gitlab.com/protesilaos/dotfiles.git"]
+copy_me = false
+
+[[clip]]
+start = "0:00:00"
+end = "0:10:00"
+position = "absolute"
