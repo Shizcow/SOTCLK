@@ -3,6 +3,13 @@
 This project is a continuation of the [Sounds of the Compiling Linux Kernel album](https://www.youtube.com/watch?v=4yMVkQRhiiQ).
 When I first made that album, nothing was documented and building was a long, slow, and tedious manual process.
 This repo serves as an infinitely better way to create tracks.
+### More samples
+More samples of generated tracks can be found in the [`compiled_albums`](compiled_albums/) directory. These are full albums, uploaded
+for archival purposes. While most tracks will be able to generate similar output between machines, the data which the tracks pull from
+can change over time. In some cases, that may include a complete build tool switch of something like tensorflow, which can cause a
+track to sound completely different.
+
+Fully compiled album tracks are not available due to github file size limits, but links to releases will are available.
 ### How it works
 `sox(1)` is an amazing program that can, among other things, interpret audio streams
 without any header information. This feature is often used to convert and play audio

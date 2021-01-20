@@ -10,6 +10,7 @@ bit_depth = 8
 sample_rate = 22100
 channels = 2
 encoding = "unsigned"
+other_options_post = "-r 44100"
 #other_options = "" # optional
 tempo = 1.0
 

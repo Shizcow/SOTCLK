@@ -9,6 +9,7 @@ sample_rate = 22100
 channels = 1
 encoding = "unsigned"
 tempo = 0.5
+other_options_post = "-r 44100"
 
 [build]
 build_command = "cd tensorflow && yes '' | ./configure"

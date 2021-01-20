@@ -8,6 +8,7 @@ bit_depth = 8
 sample_rate = 44000
 channels = 1
 encoding = "unsigned"
+other_options_post = "-r 44100"
 tempo = 0.25
 
 [build]

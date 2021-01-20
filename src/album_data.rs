@@ -143,7 +143,7 @@ impl<'a> AlbumData<'a> {
             let fstr = files
                 .iter()
                 .map(|s| s.clone().into_string().unwrap())
-                .map(|name| format!("file '{}'", name.replace("'", "\\'")))
+                .map(|name| format!("file '{}'", name.replace("'", "'\\''")))
                 .collect::<Vec<String>>()
                 .join("\n");
 

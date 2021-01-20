@@ -1,0 +1,17 @@
+I went and wrote a full-featured build tool to procedurally generate these tracks... for some reason. Link to the source code at the bottom of the description. Rebuilding this album (this time with proper documentation!) is a test of the build tool and a warm-up for Volume 2 -- coming soon.
+
+Tensorflow sounds a lot different from before, build tool must have changed. To make up for this I've added a BONUS TRACK, Protesailos's dotemacs, one I'm a huge fan of.
+
+Tracklist:
+0:00 Building the Kernel
+5:03 cat vmlinuz-linux
+8:46 Building SBCL
+9:55 ls -R /
+15:17 rg e /
+20:29 find journal | xargs cat
+22:10 find Android SDK | xargs cat
+25:01 cat classroom.blend
+27:39 Building TensorFlow
+32:41 Protesailos's dotemacs
+
+Source code and .flac releases: https://github.com/Shizcow/SOTCLK

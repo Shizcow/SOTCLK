@@ -9,6 +9,7 @@ sample_rate = 16575
 channels = 2
 encoding = "unsigned"
 tempo = 0.20
+other_options_post = "-r 44100"
 
 [[clip]]
 start = "0:0:00"
