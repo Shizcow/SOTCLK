@@ -9,4 +9,6 @@ tracks = [
        "journal",
        "android_sdk",
        "classroom",
+       "tensorflow",
+       "dotemacs",
 ]

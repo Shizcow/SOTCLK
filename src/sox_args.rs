@@ -6,7 +6,8 @@ use crate::track_name::TrackName;
 
 pub struct SoxArgs {
     args: Vec<OsString>,
-    buffer_args_n: usize,
+    buffer_args_n_pre: usize,
+    buffer_args_n_post: usize,
 }
 
 impl SoxArgs {
@@ -21,7 +22,7 @@ impl SoxArgs {
             "-e".into(),
             config.sox().encoding.clone().into(),
         ];
-        let other_n = if let Some(other_args) = &config.sox().other_options {
+        let other_n_pre = if let Some(other_args) = &config.sox().other_options_pre {
             let bytes = Command::new("sh")
                 .arg("-c")
                 .arg("for arg in $*; do echo $arg; done")
@@ -33,12 +34,12 @@ impl SoxArgs {
             let delineated =
             // virtually guarenteed to be lossless
              String::from_utf8_lossy(&bytes);
-            let mut other_n = 0;
+            let mut other_n_pre = 0;
             for other_arg in delineated.lines() {
-                other_n += 1;
+                other_n_pre += 1;
                 sox_args.push(other_arg.to_string().into());
             }
-            other_n
+            other_n_pre
         } else {
             0
         };
@@ -51,15 +52,41 @@ impl SoxArgs {
                 .into_os_string(),
             "-t".into(),
             "flac".into(),
+        ]);
+
+        let other_n_post = if let Some(other_args) = &config.sox().other_options_post {
+            let bytes = Command::new("sh")
+                .arg("-c")
+                .arg("for arg in $*; do echo $arg; done")
+                .arg("sox")
+                .arg(other_args)
+                .output()
+                .expect("Output command failed")
+                .stdout;
+            let delineated =
+            // virtually guarenteed to be lossless
+             String::from_utf8_lossy(&bytes);
+            let mut other_n_post = 0;
+            for other_arg in delineated.lines() {
+                other_n_post += 1;
+                sox_args.push(other_arg.to_string().into());
+            }
+            other_n_post
+        } else {
+            0
+        };
+
+        sox_args.push(
             track_name
                 .dest_dir()
                 .join(TrackData::unprocessed_filename())
                 .into_os_string(),
-        ]);
+        );
 
         Self {
             args: sox_args,
-            buffer_args_n: other_n,
+            buffer_args_n_pre: other_n_pre,
+            buffer_args_n_post: other_n_post,
         }
     }
     pub fn execute(&self) {
@@ -87,15 +114,17 @@ impl std::fmt::Display for SoxArgs {
             self.args
                 .iter()
                 .enumerate()
-                .map(
-                    |(i, arg)| if i == 10 + self.buffer_args_n || i == 13 + self.buffer_args_n {
+                .map(|(i, arg)| {
+                    if i == 10 + self.buffer_args_n_pre
+                        || i == 13 + self.buffer_args_n_pre + self.buffer_args_n_post
+                    {
                         "'".to_owned()
                             + &format!("{}", arg.to_string_lossy()).replace("'", "\\'")
                             + "'"
                     } else {
                         format!("{}", arg.to_string_lossy())
                     }
-                )
+                })
                 .collect::<Vec<String>>()
                 .join(" ")
         )

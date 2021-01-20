@@ -45,9 +45,15 @@ bit_depth = 8
 sample_rate = 44000
 channels = 2
 encoding = "unsigned"
-# `other_options` is an optional field
+# `other_options_pre` is an optional field
 # It injects options directly into the sox invocation command
-other_options = ""
+# these options are placed before the input file
+other_options_pre = ""
+# `other_options_post` is an optional field
+# It injects options directly into the sox invocation command
+# these options are placed after the input file
+# Mostly useful for spoofing output samplerate for ffmpeg to be happy
+other_options_post = ""
 # `tempo` is an optional field
 # It tells ffmpeg to speed up or slow down audio during processing
 # Can be used to increase the sample_rate while keeping the same data, often improving quality

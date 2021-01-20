@@ -153,7 +153,8 @@ pub struct Sox {
     pub sample_rate: u32,
     pub channels: u32,
     pub encoding: String,
-    pub other_options: Option<String>,
+    pub other_options_pre: Option<String>,
+    pub other_options_post: Option<String>,
     pub tempo: Option<f64>,
 }
 
