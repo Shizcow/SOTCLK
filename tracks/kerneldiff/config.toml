@@ -1,0 +1,25 @@
+[output]
+name = "Linux Kernel Git Diff History"
+# https://github.com/torvalds/linux/commit/a5b2c10c05ef12739be9907cc35acd33dff09020
+# Why is it always amd drivers
+output_command = "cd linux && git rev-list HEAD | xargs git show"
+#output_command = "cd linux && git diff 95d620adb48f7728e67d82f56f756e8d451cf8d2...a5b2c10c05ef12739be9907cc35acd33dff09020 drivers/gpu/drm/amd/include/asic_reg/dcn/dcn_3_0_1_sh_mask.h"
+output_buffer = "1G"
+
+[sox]
+bit_depth = 8
+sample_rate = 48000
+channels = 1
+encoding = "unsigned"
+
+[build] # 95d620adb48f7728e67d82f56f756e8d451cf8d2
+build_command = "sh -c 'git rev-list master | tail -n +20000 | head -n 1 | xargs git checkout'"
+http_sources = [] # a5b2c10c05ef12739be9907cc35acd33dff09020
+git_sources = ["https://github.com/torvalds/linux"]
+git_update = false
+copy_me = false
+
+# [[clip]]
+# start = "0:00:00"
+# end = "0:20:00"
+# position = "relative"

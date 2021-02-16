@@ -1,0 +1,19 @@
+[album]
+title = "Sounds of the Compiling Linux Kernel: Vol. 2"
+tracks = [
+       "Kernel git diff history",
+       "objdump",
+       "manpages",
+       "info",
+       "A single C++ Template Error",
+       "remacs or gccemacs",
+       "systemd something",
+       "emoji",
+       "Intel leak",
+       "COVID",
+       "A shitton of elisp",
+       "Actual AI thinking sounds",
+]
+
+# C++ Template error:
+# https://codegolf.stackexchange.com/questions/5802/write-the-shortest-program-that-generates-the-most-compiler-warnings-and-errors
