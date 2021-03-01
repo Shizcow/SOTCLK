@@ -1,0 +1,116 @@
+[output]
+name = "sbcl build"
+output_command = "find . -name '*' | xargs cat" # redirect for warnings
+output_buffer = "300M" # will run out before this limit
+
+[sox]
+bit_depth = 8
+sample_rate = 44100
+channels = 2
+encoding = "unsigned"
+other_options_post = "-r 44100"
+tempo = 1.0
+
+[build]
+build_command = ""
+http_sources = []
+git_sources = [
+            "git://git.taler.net/auditor.git",
+            "git://git.taler.net/backoffice.git",
+            "git://git.taler.net/bank.git",
+            "git://git.taler.net/buywith.git",
+            "git://git.taler.net/taler-mdb.git",
+            "git://git.taler.net/taler-merchant-demos.git",
+            "git://git.taler.net/docs.git",
+            "git://git.taler.net/help.git",
+            "git://git.taler.net/marketing.git",
+            "git://git.taler.net/www.git",
+            "git://git.taler.net/exchange.git",
+            "git://git.taler.net/merchant.git",
+            "git://git.taler.net/wallet-core.git",
+            "git://git.taler.net/android-node-v8.git",
+            "git://git.taler.net/django-payments-taler.git",
+            "git://git.taler.net/gnu-taler-payment-for-woocommerce.git",
+            "git://git.taler.net/gnurl.git",
+            "git://git.taler.net/saleor-frontend.git",
+            "git://git.taler.net/woocommerce-taler.git",
+            "git://git.taler.net/codeless.git",
+            "git://git.taler.net/blog.git",
+            "git://git.taler.net/donations.git",
+            "git://git.taler.net/landing.git",
+            "git://git.taler.net/merchant-frontend-examples.git",
+            "git://git.taler.net/schemafuzz.git",
+            "git://git.taler.net/survey.git",
+            "git://git.taler.net/akono.git",
+            "git://git.taler.net/build-common.git",
+            "git://git.taler.net/deployment.git",
+            "git://git.taler.net/merchant-backoffice.git",
+            "git://git.taler.net/taler-android.git",
+            "git://git.taler.net/taler-ios.git",
+            "git://git.taler.net/wallet-kotlin.git",
+            "git://git.taler.net/web-common.git",
+            "git://git.taler.net/bafin.git",
+            "git://git.taler.net/dold-thesis-phd.git",
+            "git://git.taler.net/papers.git",
+            "git://git.taler.net/anastasis-gtk.git",
+            "git://git.taler.net/anastasis-www.git",
+            "git://git.taler.net/anastasis.git",
+            "git://git.taler.net/libeufin-deployment.git",
+            "git://git.taler.net/libeufin.git",
+            "git://git.taler.net/sync.git",
+            "git://git.taler.net/wallet-android.git",
+            "git://git.taler.net/taler-util.git",
+            "git://git.taler.net/twister.git",
+]
+git_update = false
+copy_me = false
+
+[[clip]]
+start = "0:09:56"
+end = "0:10:30"
+position = "absolute"
+
+[[clip]]
+start = "0:16:50"
+end = "0:17:34"
+position = "absolute"
+
+[[clip]]
+start = "0:17:46"
+end = "0:17:55"
+position = "absolute"
+
+[[clip]]
+start = "0:18:53"
+end = "0:19:06"
+position = "absolute"
+
+[[clip]]
+start = "0:22:11"
+end = "0:22:28"
+position = "absolute"
+
+[[clip]]
+start = "0:26:10"
+end = "0:26:32"
+position = "absolute"
+
+[[clip]]
+start = "0:28:52"
+end = "0:29:04"
+position = "absolute"
+
+[[clip]]
+start = "0:33:50"
+end = "0:35:05"
+position = "absolute"
+
+[[clip]]
+start = "0:36:40"
+end = "0:37:05"
+position = "absolute"
+
+[[clip]]
+start = "0:51:40"
+end = "0:52:33"
+position = "absolute"
