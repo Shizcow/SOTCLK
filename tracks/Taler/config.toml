@@ -1,5 +1,5 @@
 [output]
-name = "sbcl build"
+name = "GNU Taler Git Repos"
 output_command = "find . -name '*' | xargs cat" # redirect for warnings
 output_buffer = "300M" # will run out before this limit
 
